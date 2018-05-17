@@ -10,8 +10,8 @@ struct Logger {}
 impl fmt::Write for Logger {
     fn write_str(&mut self, message: &str) -> fmt::Result {
         use super::interface;
-        for index in 0..message.len() {
-            unsafe { interface::log_character(message.chars().nth(index).unwrap() as u8); }
+        for character in message.chars() {
+            unsafe { interface::log_character(character as u8); }
         }
         Ok(())
     }
