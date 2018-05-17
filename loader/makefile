@@ -29,7 +29,3 @@ minimal:
 # copy
 copy:
 	cp $(RTARGET) $(OUTPUT)
-
-# run
-run:
-	cargo run
