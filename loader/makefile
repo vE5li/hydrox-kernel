@@ -1,6 +1,9 @@
 # files
 OUTPUT ?= /usr/bin/loader
 
+# rust features
+FEAT ?= input
+
 # targets
 RTARGET := target/debug/alb1-loader
 
@@ -13,13 +16,13 @@ clean:
 
 # compile
 build:
-	cargo build --features input
+	cargo build --features "$(FEAT)"
 
-# verbose build for configuring
+# verbose feature
 verbose:
-	cargo build --features "input verbose"
+	cargo build --features "$(FEAT) verbose"
 
-# compile without input system
+# build without features
 minimal:
 	cargo build
 
