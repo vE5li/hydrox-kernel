@@ -6,9 +6,43 @@ use std::fs;
 #[cfg(feature = "input")]
 pub use input::*;
 
+// version channels
+#[derive(Copy, Clone)]
+pub enum Channel {
+    Stable,
+    Beta,
+    Nightly,
+    None,
+}
+
+// implement channel
+impl Channel {
+
+    // get the channel from a string
+    pub fn from_raw(source: &str) -> Channel {
+        match source {
+            "stable" => Channel::Stable,
+            "beta" => Channel::Beta,
+            "nightly" => Channel::Nightly,
+            "none" => Channel::None,
+            channel => panic!("[ loader ] [ config ] no channel named '{}'. must be 'stable', 'beta', 'nightly' or 'none'", channel),
+        }
+    }
+
+    // get an extention from the channel
+    pub fn suffix(&self) -> &'static str {
+        match *self {
+            Channel::Stable => ".stable",
+            Channel::Beta => ".beta",
+            Channel::Nightly => ".nightly",
+            Channel::None => "",
+        }
+    }
+}
+
 // possible loader modes
 pub enum LoadMode {
-    Listed(Vec<(u32, usize)>),
+    Listed(Vec<(u32, usize, Channel)>),
     Indexed(usize),
 }
 
@@ -18,6 +52,7 @@ pub struct Context {
     pub translation_path:   String,
     pub serial_device_path: String,
     pub images:             Vec<String>,
+    pub channel:            Channel,
     pub load_mode:          LoadMode,
     pub instant_load:       bool,
 }
@@ -66,22 +101,31 @@ fn parse_config(context: &mut Context, filename: &str, prefix: &mut String) {
                     // specify index for choosing a kernel image
                     ":use" => context.load_mode = LoadMode::Indexed(words.pop().expect("[ loader ] [ config ] no index for use specified").parse().expect("[ loader ] [ config ] unable to parse index to use")),
 
-                    // assign a certain ip to a load index
-                    ":assign" => {
-                        let address: u32 = words.pop().expect("[ loader ] [ config ] no ethernet address specified").parse().expect("[ loader ] [ config ] unable to parse address");
-                        let index: usize = words.pop().expect("[ loader ] [ config ] no binary file specified").parse().expect("[ loader ] [ config ] unable to parse index");
-                        if let LoadMode::Listed(list) = &mut context.load_mode {
-                            list.push((address, index));
-                            continue;
-                        }
-                        context.load_mode = LoadMode::Listed(vec!((address, index)));
-                    },
+                    // specify the channel to load from
+                    ":channel" => context.channel = Channel::from_raw(words.pop().expect("[ loader ] [ config ] no channel specified")),
 
                     // set instant load
                     ":instant" => context.instant_load = match words.pop().expect("[ loader ] [ config ] no value for instant-load specified") {
                         "enable" => true,
                         "disable" => false,
                         value => panic!("[ loader ] [ config ] undefined instant-load value '{}'. must be 'enable' or 'disable'", value),
+                    },
+
+                    // assign a certain ip to a load index
+                    ":assign" => {
+                        let address: u32 = words.pop().expect("[ loader ] [ config ] no ethernet address specified").parse().expect("[ loader ] [ config ] unable to parse address");
+                        let index: usize = words.pop().expect("[ loader ] [ config ] no image index specified").parse().expect("[ loader ] [ config ] unable to parse index");
+                        let channel = match words.pop() {
+                            Some(word) => Channel::from_raw(word),
+                            None => context.channel,
+                        };
+
+                        // if the mode is already listed, push the element. otherwise set the mode to listed
+                        if let LoadMode::Listed(list) = &mut context.load_mode {
+                            list.push((address, index, channel));
+                            continue;
+                        }
+                        context.load_mode = LoadMode::Listed(vec!((address, index, channel)));
                     },
 
                     // invalid setting
@@ -95,19 +139,20 @@ fn parse_config(context: &mut Context, filename: &str, prefix: &mut String) {
 // parse the command line arguments
 pub fn parse_parameters() -> Context {
 
+    // needed only for parsing
+    let mut prefix = String::new();
+
     // collect parameters and create a clean context
     let mut parameters: Vec<String> = env::args().rev().collect();
     let mut context = Context {
         #[cfg(feature = "input")]
         translation_path:       String::new(),
         images:                 Vec::new(),
+        channel:                Channel::None,
         load_mode:              LoadMode::Indexed(0),
         serial_device_path:     String::new(),
         instant_load:           false,
     };
-
-    // kernel image prefix
-    let mut prefix = String::new();
 
     // pop loader path
     parameters.pop();
@@ -132,6 +177,9 @@ pub fn parse_parameters() -> Context {
 
                 // specify index for choosing a kernel image
                 "-u" => context.load_mode = LoadMode::Indexed(parameters.pop().expect("[ loader ] [ flag ] no index for use specified").parse().expect("[ loader ] [ flag ] unable to parse index to use")),
+
+                // specify the channel to load from
+                "-r" => context.channel = Channel::from_raw(&parameters.pop().expect("[ loader ] [ config ] no channel specified")),
 
                 // enable instant load
                 "-i" => context.instant_load = true,

@@ -93,12 +93,14 @@ fn idle(serial_device_path: &str) {
 // start the serial mode
 pub fn start(context: Context) {
     if let LoadMode::Indexed(index) = context.load_mode {
+        let image = context.images[index].clone() + context.channel.suffix();
         println!("[ loader ] starting in serial mode");
+        println!("[ loader ] selected kernel image '{}'", &image);
 
         // check if instant load in enabled
         if context.instant_load {
             println!("[ loader ] instant load enabled");
-            transmit_binary(&context.serial_device_path, &context.images[index]);
+            transmit_binary(&context.serial_device_path, &image);
         } else {
             #[cfg(feature = "input")]
             let loading = start_daemon(&context);
@@ -110,7 +112,7 @@ pub fn start(context: Context) {
                 loading.store(true, Ordering::Relaxed);
 
                 // send the kernel
-                transmit_binary(&context.serial_device_path, &context.images[index]);
+                transmit_binary(&context.serial_device_path, &image);
 
                 // unblock input
                 #[cfg(feature = "input")]

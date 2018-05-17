@@ -14,7 +14,8 @@ SCONFIG ?= serial.load
 # compiler
 ED ?= master
 LFLAGS ?= -lgcc -nostdlib -Wl,--build-id=none
-OUTPUT ?= $(OUTPUT_DIR)/kernel_$(ED).bin
+KERNEL_BIN ?= $(OUTPUT_DIR)/kernel_$(ED).bin
+OUTPUT ?= $(KERNEL_BIN).nightly
 CROSS ?= aarch64-elf-
 
 # files
@@ -91,3 +92,11 @@ ethernet:
 rebuild: clean
 	make ED=master
 	make ED=headless
+
+# move beta to stable
+stable:
+	cp -f $(KERNEL_BIN).beta $(KERNEL_BIN).stable
+
+# move nightly to beta
+beta:
+	cp -f $(KERNEL_BIN).nightly $(KERNEL_BIN).beta
