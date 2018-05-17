@@ -1,5 +1,4 @@
 # keyboard device file
-# /dev/input/by-path/pci-0000:00:06.0-usb-0:3:1.0-event-kbd
 :device         /dev/input/by-path/pci-0000:00:04.0-usb-0:1:1.0-event-kbd
 
 # escape
