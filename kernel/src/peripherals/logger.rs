@@ -9,9 +9,8 @@ struct Logger {}
 // writing formatted fmt::Arguments
 impl fmt::Write for Logger {
     fn write_str(&mut self, message: &str) -> fmt::Result {
-        use super::interface;
         for character in message.chars() {
-            unsafe { interface::log_character(character as u8); }
+            unsafe { super::interface::log_character(character as u8); }
         }
         Ok(())
     }
