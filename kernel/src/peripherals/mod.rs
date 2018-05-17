@@ -22,7 +22,7 @@ pub fn initialize() {
     mailman::pop_tag();
 
     // set physical pin 40 as output
-    gpio::set_function(21, gpio::Function::Output);
+    gpio::set_function(gpio::Pin::V21, gpio::Function::Output);
 }
 
 // temporary function
@@ -32,8 +32,8 @@ pub fn idle() -> ! {
         let event = InputEvent::from_raw(unsafe { interface::read_event() });
         match event.tupled() {
             (InputMode::Setting, b'q') => unsafe { interface::reboot() },
-            (InputMode::Action, b'o') => self::gpio::set_state(21, false),
-            (InputMode::Action, b'p') => self::gpio::set_state(21, true),
+            (InputMode::Action, b'o') => self::gpio::set_state(gpio::Pin::V21, false),
+            (InputMode::Action, b'p') => self::gpio::set_state(gpio::Pin::V21, true),
             _ => {
                 if let Some(character) = event.ascii() {
                     log!("key pressed {}", character);
