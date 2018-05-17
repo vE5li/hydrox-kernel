@@ -116,6 +116,7 @@ pub fn parse_parameters() -> Context {
     while let Some(word) = parameters.pop() {
         if word.chars().nth(0).unwrap() == '-' {
             match word.as_ref() {
+
                 // specify a file for input to be translated from
                 #[cfg(feature = "input")]
                 "-t" => context.translation_path = parameters.pop().expect("[ loader ] [ flag ] no translation file specified").to_string(),

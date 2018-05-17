@@ -8,7 +8,7 @@ pub mod input;
 // main
 fn main() {
 
-    // parsee command line arguments passed to the loader
+    // parse command line arguments passed to the loader
     let context = common::parse_parameters();
 
     // if there is no serial device specified, start in ethernet mode

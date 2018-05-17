@@ -1,4 +1,4 @@
 :translate  external.map
-:prefix     /code/alb1/kernel/binary/kernel_
+:prefix     binary/kernel_
 :image      master.bin
 :image      headless.bin
