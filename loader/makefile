@@ -1,10 +1,5 @@
-# compiler
-CFLAGS := -std=c++17
-CROSS ?=
-
 # files
 OUTPUT ?= /usr/bin/loader
-SOURCE_FILES := main.cpp
 
 # targets
 RTARGET := target/debug/alb1-loader
