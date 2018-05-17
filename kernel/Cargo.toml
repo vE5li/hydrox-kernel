@@ -1,0 +1,13 @@
+[package]
+name = "alb1-kernel"
+version = "0.0.3"
+authors = ["ve5li <ve5li@tuta.io>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[features]
+graphics = []
+
+[dependencies]
+rlibc = "1.0"

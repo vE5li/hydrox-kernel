@@ -1,0 +1,106 @@
+# keyboard device file
+# /dev/input/by-path/pci-0000:00:06.0-usb-0:3:1.0-event-kbd
+:device         /dev/input/by-path/pci-0000:00:04.0-usb-0:1:1.0-event-kbd
+
+# escape
+1   press   27  :   :
+
+# 1 - 0
+2   press   b1  b!  :
+*   press   b2  b"  :
+*   press   b3  b§  :
+*   press   b4  b$  :
+*   press   b5  b%  :
+*   press   b6  b&  :
+*   press   b7  b/  b{
+*   press   b8  b(  b[
+*   press   b9  b)  b]
+*   press   b0  b=  b}
+*   press   b\  b?  b:
+
+# apostrophe
+13  press   b´  b`  :
+
+# backspace
+14  press   8   :   :
+
+# tab
+15  press   9   :   :
+
+# q - p
+16  press   bq  bQ  b@
+*   press   bw  bW  :
+*   press   be  bE  :
+*   press   br  bR  :
+*   press   bt  bT  :
+*   press   bz  bZ  :
+*   press   bu  bU  :
+*   press   bi  bI  :
+*   press   bo  bO  :
+*   press   bp  bP  :
+
+# slash
+26  press   b/  :   :
+
+# +
+27  press   b+  b*  b~
+
+# enter
+28  press   10  :   :
+
+# control
+29  set     control
+
+# a - l
+30  press   ba  bA  :
+*   press   bs  bS  :
+*   press   bd  bD  :
+*   press   bf  bF  :
+*   press   bg  bG  :
+*   press   bh  bH  :
+*   press   bj  bJ  :
+*   press   bk  bK  :
+*   press   bl  bL  :
+
+# caret
+41  press   b^  :   :
+
+# shift
+42  set     shift
+
+# #
+43  press   b#  b'  :
+
+# y - .
+44  press   by  bY  :
+*   press   bx  bX  :
+*   press   bc  bC  :
+*   press   bv  bV  :
+*   press   bb  bB  :
+*   press   bn  bN  :
+*   press   bm  bM  :
+*   press   b,  b;  :
+*   press   b.  b:  :
+*   press   b-  b_  :
+
+# shift
+54  set     shift
+
+# alt
+56  set     alternative
+
+# space
+57  press   s   :   :
+
+# capslock
+58  toggle  capslock
+
+# <
+86  press   b<  b>  b|
+
+# control
+97  set     control
+
+# super key
+125 set     super
+*   set     super

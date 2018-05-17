@@ -1,0 +1,2 @@
+:config     common.load
+:serial     /dev/ttyUSB0
