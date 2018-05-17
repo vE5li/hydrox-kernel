@@ -94,9 +94,9 @@ rebuild: clean
 	make ED=headless
 
 # move beta to stable
-stable:
+stable: rebuild
 	cp -f $(KERNEL_BIN).beta $(KERNEL_BIN).stable
 
 # move nightly to beta
-beta:
+beta: rebuild
 	cp -f $(KERNEL_BIN).nightly $(KERNEL_BIN).beta
