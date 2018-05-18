@@ -1,7 +1,15 @@
 use core::fmt;
 
-// static instance
-static mut LOGGER: Logger = Logger {};
+// log partial (macro)
+macro_rules! logp {
+    ($($arg:tt)*) => ({$crate::peripherals::logger::log(format_args!($($arg)*));});
+}
+
+// log line (macro)
+macro_rules! log {
+    ($fmt:expr) => (logp!(concat!("[ kernel ] ", $fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => (logp!(concat!("[ kernel ] ", $fmt, "\n"), $($arg)*));
+}
 
 // serial/ethernet logger
 struct Logger {}
@@ -16,16 +24,8 @@ impl fmt::Write for Logger {
     }
 }
 
-// log partial (macro)
-macro_rules! logp {
-    ($($arg:tt)*) => ({$crate::peripherals::logger::log(format_args!($($arg)*));});
-}
-
-// log line (macro)
-macro_rules! log {
-    ($fmt:expr) => (logp!(concat!("[ kernel ] ", $fmt, "\n")));
-    ($fmt:expr, $($arg:tt)*) => (logp!(concat!("[ kernel ] ", $fmt, "\n"), $($arg)*));
-}
+// static instance
+static mut LOGGER: Logger = Logger {};
 
 // log function called by the macros
 pub fn log(args: fmt::Arguments) {

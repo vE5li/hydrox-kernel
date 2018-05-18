@@ -21,7 +21,7 @@ pub enum Function {
     Alternate3,
 }
 
-// all gpio pins
+// virtual pins
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum Pin {
@@ -79,6 +79,36 @@ pub enum Pin {
     V51     = 51,
     V52     = 52,
     V53     = 53,
+}
+
+// physical pins
+impl Pin {
+    pub const P3: Pin = Pin::V2;
+    pub const P5: Pin = Pin::V3;
+    pub const P7: Pin = Pin::V4;
+    pub const P8: Pin = Pin::V14;
+    pub const P10: Pin = Pin::V15;
+    pub const P11: Pin = Pin::V17;
+    pub const P12: Pin = Pin::V18;
+    pub const P13: Pin = Pin::V27;
+    pub const P15: Pin = Pin::V22;
+    pub const P16: Pin = Pin::V23;
+    pub const P18: Pin = Pin::V24;
+    pub const P19: Pin = Pin::V10;
+    pub const P21: Pin = Pin::V9;
+    pub const P22: Pin = Pin::V25;
+    pub const P23: Pin = Pin::V11;
+    pub const P24: Pin = Pin::V8;
+    pub const P26: Pin = Pin::V7;
+    pub const P29: Pin = Pin::V5;
+    pub const P31: Pin = Pin::V6;
+    pub const P32: Pin = Pin::V12;
+    pub const P33: Pin = Pin::V13;
+    pub const P35: Pin = Pin::V19;
+    pub const P36: Pin = Pin::V16;
+    pub const P37: Pin = Pin::V26;
+    pub const P38: Pin = Pin::V20;
+    pub const P40: Pin = Pin::V21;
 }
 
 // gpio register layout

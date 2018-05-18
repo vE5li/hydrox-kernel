@@ -1,15 +1,13 @@
 #![feature(exclusive_range_pattern)]
 #![feature(lang_items)]
+#![no_builtins]
 #![no_std]
-
-// crates
-extern crate rlibc;
 
 // mudules
 #[macro_use]
-mod peripherals;
-#[macro_use]
 mod memory;
+#[macro_use]
+mod peripherals;
 #[cfg(feature = "graphics")]
 mod graphics;
 

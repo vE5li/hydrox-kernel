@@ -8,6 +8,3 @@ crate-type = ["staticlib"]
 
 [features]
 graphics = []
-
-[dependencies]
-rlibc = "1.0"
