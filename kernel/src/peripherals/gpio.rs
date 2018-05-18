@@ -1,5 +1,6 @@
 // gpio resistor state
 #[allow(dead_code)]
+#[derive(Copy, Clone)]
 pub enum Pull {
     Off,
     Down,
@@ -8,6 +9,7 @@ pub enum Pull {
 
 // gpio pin functions
 #[allow(dead_code)]
+#[derive(Copy, Clone)]
 pub enum Function {
     Input,
     Output,
@@ -21,6 +23,7 @@ pub enum Function {
 
 // all gpio pins
 #[allow(dead_code)]
+#[derive(Copy, Clone)]
 pub enum Pin {
     V0      = 0,
     V1      = 1,

@@ -18,8 +18,11 @@ pub mod gpio;
 // initialize all peripherals
 pub fn initialize() {
     // turn off the act led
-    mailman::push_tag(&[0x38041, 8, 0, 130, 0]);
-    mailman::pop_tag();
+    let mut letter = mailman::Letter::new();
+    letter.push_tag(mailman::MailboxTag::SetPowerState, &[130, 0]);
+    letter.push_end_tag();
+    letter.send(mailman::Channel::Tags);
+    letter.receive(mailman::Channel::Tags);
 
     // set physical pin 40 as output
     gpio::set_function(gpio::Pin::V21, gpio::Function::Output);

@@ -1,4 +1,5 @@
 // event operation mode
+#[derive(Copy, Clone)]
 pub enum InputMode {
     None,
     Action,
@@ -9,6 +10,7 @@ pub enum InputMode {
 }
 
 // key press event from the user
+#[derive(Copy, Clone)]
 pub struct InputEvent {
     pub modifiers:  u8,
     pub code:       u8,

@@ -1,4 +1,4 @@
-use ::peripherals::mailman;
+use ::peripherals::mailman::{ Letter, Channel, MailboxTag };
 
 // all the information needed to render to the frambuffer
 pub struct FrameBuffer {
@@ -10,24 +10,45 @@ pub struct FrameBuffer {
 
 // initialize a framebuffer
 pub fn initialize() -> FrameBuffer {
-    // request the framebuffer width and height
-    mailman::push_tag(&[0x40003, 8, 0, 0, 0]);
-    let buffer = mailman::pop_tag();
-    let width = buffer[5];
-    let height = buffer[6];
+
+    // get the frambuffer size
+    let mut letter = Letter::new();
+    letter.push_tag(MailboxTag::GetFramebufferSize, &[0, 0]);
+    letter.push_end_tag();
+    letter.send(Channel::Tags);
+    letter.receive(Channel::Tags);
+
+    // width and height
+    let (width, height) = {
+        let buffer = letter.buffer();
+        (buffer[5], buffer[6])
+    };
+
+    // set the frambuffer size and depth, then allocate it
+    letter.clear();
+    letter.push_tag(MailboxTag::SetPhysicalSize, &[width, height]);
+    letter.push_tag(MailboxTag::SetVirtualSize, &[width, height]);
+    letter.push_tag(MailboxTag::SetFramebufferDepth, &[16]);
+    letter.push_tag(MailboxTag::AllocateFramebuffer, &[16, 0]);
+    letter.push_end_tag();
+    letter.send(Channel::Tags);
+    letter.receive(Channel::Tags);
+
+    // framebuffer base
+    let base = {
+        let index = 3 + letter.tag_index(MailboxTag::AllocateFramebuffer).expect("invalid allocate frambuffer response");
+        bus_physical!(letter.buffer()[index] as usize)
+    };
 
     // request the framebuffer base
-    mailman::push_tag(&[0x48003, 8, 8, width, height, 0x48004, 8, 8, width, height, 0x48005, 4, 4, 16, 0x40001, 8, 4, 16, 0]);
-    let buffer = mailman::pop_tag();
-    let mut index = 2;
-    while buffer[index] != 0x40001 {
-        index += 3 + (buffer[index + 1] >> 2) as usize;
-    }
-    let base = bus_physical!(buffer[index + 3] as usize);
+    letter.clear();
+    letter.push_tag(MailboxTag::GetFramebufferPitch, &[0]);
+    letter.push_end_tag();
+    letter.send(Channel::Tags);
+    letter.receive(Channel::Tags);
 
-    // request the framebuffer pitch
-    mailman::push_tag(&[0x40008, 4, 0, 0]);
-    let pitch = mailman::pop_tag()[5] as usize;
+    // frambuffer pitch
+    let pitch = letter.buffer()[5] as usize;
 
     // create the framebuffer structure
     FrameBuffer {
