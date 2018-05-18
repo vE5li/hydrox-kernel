@@ -13,6 +13,7 @@ pub fn initialize() -> FrameBuffer {
 
     // get the frambuffer size
     let mut letter = Letter::new();
+    letter.clear_tags();
     letter.push_tag(MailboxTag::GetFramebufferSize, &[0, 0]);
     letter.push_end_tag();
     letter.send(Channel::Tags);
@@ -25,7 +26,7 @@ pub fn initialize() -> FrameBuffer {
     };
 
     // set the frambuffer size and depth, then allocate it
-    letter.clear();
+    letter.clear_tags();
     letter.push_tag(MailboxTag::SetPhysicalSize, &[width, height]);
     letter.push_tag(MailboxTag::SetVirtualSize, &[width, height]);
     letter.push_tag(MailboxTag::SetFramebufferDepth, &[16]);
@@ -41,7 +42,7 @@ pub fn initialize() -> FrameBuffer {
     };
 
     // request the framebuffer base
-    letter.clear();
+    letter.clear_tags();
     letter.push_tag(MailboxTag::GetFramebufferPitch, &[0]);
     letter.push_end_tag();
     letter.send(Channel::Tags);

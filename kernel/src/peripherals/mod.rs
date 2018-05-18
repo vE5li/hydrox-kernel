@@ -19,6 +19,7 @@ pub mod gpio;
 pub fn initialize() {
     // turn off the act led
     let mut letter = mailman::Letter::new();
+    letter.clear_tags();
     letter.push_tag(mailman::MailboxTag::SetPowerState, &[130, 0]);
     letter.push_end_tag();
     letter.send(mailman::Channel::Tags);

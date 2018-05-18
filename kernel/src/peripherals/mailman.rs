@@ -77,15 +77,18 @@ impl Letter {
 
     // get a cleared letter
     pub fn new() -> Letter {
-        let mut letter = Letter {
+        Letter {
             buffer: [0; BUFFER_LENGTH]
-        };
-        letter.clear();
-        letter
+        }
     }
 
     // clear the request buffer
     pub fn clear(&mut self) {
+        self.buffer[0] = 0;
+    }
+
+    // clear the request buffer and set the message size
+    pub fn clear_tags(&mut self) {
         self.buffer[0] = 8;
         self.buffer[1] = 0;
     }
