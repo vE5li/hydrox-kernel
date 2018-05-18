@@ -17,6 +17,7 @@ pub mod gpio;
 
 // initialize all peripherals
 pub fn initialize() {
+
     // turn off the act led
     let mut letter = mailman::Letter::new();
     letter.clear_tags();
