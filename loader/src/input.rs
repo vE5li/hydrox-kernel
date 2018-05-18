@@ -37,6 +37,23 @@ pub enum Modifier {
     Function        = 0b00100000,
 }
 
+// implement modifier
+impl Modifier {
+
+    // get a modifer from a string
+    pub fn from_raw(source: &str) -> Modifier {
+        match source {
+            "capslock" => Modifier::Capslock,
+            "shift" => Modifier::Shift,
+            "control" => Modifier::Control,
+            "super" => Modifier::Super,
+            "alternative" => Modifier::Alternative,
+            "function" => Modifier::Function,
+            name => panic!("[ input ] no modifier key named '{}'", name),
+        }
+    }
+}
+
 // keys actions on event
 #[derive(Copy, Clone, Debug)]
 enum Action {
@@ -112,9 +129,9 @@ impl InputHandler {
                                 match source {
                                     Some(word) => {
                                         match word.chars().nth(0).unwrap() {
-                                            ':' => None,
-                                            's' => Some(10),
                                             'b' => Some(word.chars().nth(1).expect("[ input ] no character specified") as u8),
+                                            's' => Some(32),
+                                            ':' => None,
                                             _ => Some(word.parse().expect("[ input ] failed to parse character")),
                                         }
                                     },
@@ -125,30 +142,10 @@ impl InputHandler {
                         },
 
                         // set modifier on press and release event
-                        "set" => {
-                             translation_table[keycode as usize] = Action::Set(match words.pop().expect("[ input ] no modifier for setting specified") {
-                                "capslock" => Modifier::Capslock,
-                                "shift" => Modifier::Shift,
-                                "control" => Modifier::Control,
-                                "super" => Modifier::Super,
-                                "alternative" => Modifier::Alternative,
-                                "function" => Modifier::Function,
-                                word => panic!("[ input ] no modifier key named '{}'", word),
-                            });
-                        },
+                        "set" => translation_table[keycode as usize] = Action::Set(Modifier::from_raw(words.pop().expect("[ input ] no modifier for set specified"))),
 
                         // toggle modifier on press event
-                        "toggle" => {
-                             translation_table[keycode as usize] = Action::Toggle(match words.pop().expect("[ input ] no modifier for setting specified") {
-                                "capslock" => Modifier::Capslock,
-                                "shift" => Modifier::Shift,
-                                "control" => Modifier::Control,
-                                "super" => Modifier::Super,
-                                "alternative" => Modifier::Alternative,
-                                "function" => Modifier::Function,
-                                word => panic!("[ input ] no modifier key named '{}'", word),
-                            });
-                        },
+                        "toggle" => translation_table[keycode as usize] = Action::Toggle(Modifier::from_raw(words.pop().expect("[ input ] no modifier for toggle specified"))),
 
                         // undefined action
                         word => panic!("[ input ] undefined action '{}'", word),
