@@ -7,12 +7,6 @@ SECTIONS
     . = 0x1010;
     interface_read_event = .;
 
-    . = 0x1020;
-    interface_reboot = .;
-
-    . = 0x1030;
-    interface_peripherals_base = .;
-
 	. = 0x6000;
     kernel_base = .;
 

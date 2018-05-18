@@ -12,12 +12,8 @@ g start
 s parse_parameters
         adr     x1, kernel_base
         mov     sp, x1
-        // TODO: determine the base address from the parameters
-        mov     x2, #0x3f00
-        lsl     x2, x2, #16
-        strintr x2, peripherals_base
+        // parse parameters
         actled  #1
-        strint  reboot, reboot
         mov     x29, #0
 
 // entry point for soft resets

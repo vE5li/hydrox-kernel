@@ -6,6 +6,7 @@ pub enum InputMode {
     Capital,
     Setting,
     Window,
+    Advanced,
     Undefined(u8),
 }
 
@@ -35,6 +36,7 @@ impl InputEvent {
             0b00000010 => InputMode::Capital,
             0b00000100 => InputMode::Setting,
             0b00001000 => InputMode::Window,
+            0b00000110 => InputMode::Advanced,
             modifiers => InputMode::Undefined(modifiers),
         }
     }

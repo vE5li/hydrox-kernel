@@ -1,14 +1,14 @@
-pub mod interface;
-pub use self::interface::interface_peripherals_base;
+const PERIPHERALS_BASE: usize       = 0x3f000000;
 
 // get the address of a peripheral based on it's offet so the peripherals base
 macro_rules! peripheral {
-    (gpio) => ($crate::peripherals::interface_peripherals_base + 0x200000);
-    (mailbox0) => ($crate::peripherals::interface_peripherals_base + 0xb880);
-    (mailbox1) => ($crate::peripherals::interface_peripherals_base + 0xb8a0);
+    (gpio) => ($crate::peripherals::PERIPHERALS_BASE + 0x200000);
+    (mailbox0) => ($crate::peripherals::PERIPHERALS_BASE + 0xb880);
+    (mailbox1) => ($crate::peripherals::PERIPHERALS_BASE + 0xb8a0);
     (undefined) => (panic!("undefined peripheral {}", undefined));
 }
 
+pub mod interface;
 #[macro_use]
 pub mod logger;
 pub mod input;
@@ -30,15 +30,31 @@ pub fn initialize() {
     gpio::set_function(gpio::Pin::V21, gpio::Function::Output);
 }
 
+// reboot the device
+pub fn reboot() -> ! {
+    log!("reboot!");
+    loop {}
+}
+
 // temporary function
 pub fn idle() -> ! {
     use self::input::{ InputEvent, InputMode };
+
+    // loop endlessly
     loop {
         let event = InputEvent::from_raw(unsafe { interface::read_event() });
         match event.tupled() {
-            (InputMode::Setting, b'q') => unsafe { interface::reboot() },
-            (InputMode::Action, b'o') => self::gpio::set_state(gpio::Pin::V21, false),
-            (InputMode::Action, b'p') => self::gpio::set_state(gpio::Pin::V21, true),
+
+            // reboot on ctrl + shift + q
+            (InputMode::Advanced, b'@') => reboot(),
+
+            // turn off gpio on super + o
+            (InputMode::Window, b'o') => self::gpio::set_state(gpio::Pin::V21, false),
+
+            // turn on gpio on super + p
+            (InputMode::Window, b'p') => self::gpio::set_state(gpio::Pin::V21, true),
+
+            // no valid shortcut
             _ => {
                 if let Some(character) = event.ascii() {
                     log!("key pressed {}", character);

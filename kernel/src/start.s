@@ -69,8 +69,3 @@ g read_event
         bint    x1, read_event
         pop     x1, x30
         ret
-
-// reboot the device
-g reboot
-        bint    x1, reboot
-        b       .

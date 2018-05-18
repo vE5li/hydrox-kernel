@@ -53,7 +53,8 @@
 // get a peripheral address from offet (macro)
 .macro periph destination suffix
         push    x1, x2
-        ldr     x1, interface_peripherals_base
+        mov     x1, #0x3f00
+        lsl     x1, x1, #16
         ldr     x2, peripheral_offset_\suffix
         orr     x0, x1, x2
         pop     x1, x2
