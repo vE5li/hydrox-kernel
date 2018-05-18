@@ -43,7 +43,7 @@ pub fn idle() -> ! {
 
     // loop endlessly
     loop {
-        let event = InputEvent::from_raw(unsafe { interface::read_event() });
+        let event = InputEvent::from_u16(unsafe { interface::read_event() });
         match event.tupled() {
 
             // reboot on ctrl + shift + q

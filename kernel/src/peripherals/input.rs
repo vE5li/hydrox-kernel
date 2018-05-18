@@ -21,7 +21,7 @@ pub struct InputEvent {
 impl InputEvent {
 
     // get an event structure from a raw u16
-    pub fn from_raw(raw: u16) -> InputEvent {
+    pub fn from_u16(raw: u16) -> InputEvent {
         InputEvent {
             modifiers:  (raw >> 8) as u8,
             code:       raw as u8,

@@ -97,6 +97,7 @@ impl Letter {
     pub fn push(&mut self, data: u32) {
         self.buffer[self.buffer[0] as usize / 4] = data;
         self.buffer[0] += 4;
+        assert!(self.buffer[0] as usize <= BUFFER_LENGTH * 4, "mailbox request overflow");
     }
 
     // push data from a slice as a tag

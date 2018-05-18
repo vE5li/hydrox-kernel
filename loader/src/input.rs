@@ -14,8 +14,8 @@ enum KeyState {
 impl KeyState {
 
     // key state from u8
-    pub fn from_raw(index: u8) -> Option<KeyState> {
-        match index {
+    pub fn from_u8(value: u8) -> Option<KeyState> {
+        match value {
             0 => Some(KeyState::Release),
             1 => Some(KeyState::Press),
             2 => Some(KeyState::Repeat),
@@ -41,7 +41,7 @@ pub enum Modifier {
 impl Modifier {
 
     // get a modifer from a string
-    pub fn from_raw(source: &str) -> Modifier {
+    pub fn from_slice(source: &str) -> Modifier {
         match source {
             "capslock" => Modifier::Capslock,
             "shift" => Modifier::Shift,
@@ -72,8 +72,8 @@ enum InputEvent {
 impl InputEvent {
 
     // input type from u8
-    pub fn from_raw(index: u8) -> Option<InputEvent> {
-        match index {
+    pub fn from_u8(value: u8) -> Option<InputEvent> {
+        match value {
             1 => Some(InputEvent::Keyboard),
             _ => None,
         }
@@ -142,10 +142,10 @@ impl InputHandler {
                         },
 
                         // set modifier on press and release event
-                        "set" => translation_table[keycode as usize] = Action::Set(Modifier::from_raw(words.pop().expect("[ input ] no modifier for set specified"))),
+                        "set" => translation_table[keycode as usize] = Action::Set(Modifier::from_slice(words.pop().expect("[ input ] no modifier for set specified"))),
 
                         // toggle modifier on press event
-                        "toggle" => translation_table[keycode as usize] = Action::Toggle(Modifier::from_raw(words.pop().expect("[ input ] no modifier for toggle specified"))),
+                        "toggle" => translation_table[keycode as usize] = Action::Toggle(Modifier::from_slice(words.pop().expect("[ input ] no modifier for toggle specified"))),
 
                         // undefined action
                         word => panic!("[ input ] undefined action '{}'", word),
@@ -169,13 +169,13 @@ impl InputHandler {
 
             // read all device input
             self.input_device.read_exact(&mut buffer).unwrap();
-            if let Some(event) = InputEvent::from_raw(buffer[16]) {
+            if let Some(event) = InputEvent::from_u8(buffer[16]) {
                 match event {
 
                     // keyboard input
                     InputEvent::Keyboard => {
                         let keycode = buffer[18];
-                        let key_state = match KeyState::from_raw(buffer[20]) {
+                        let key_state = match KeyState::from_u8(buffer[20]) {
                             Some(state) => state,
                             None => continue,
                         };

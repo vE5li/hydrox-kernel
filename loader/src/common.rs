@@ -19,7 +19,7 @@ pub enum Channel {
 impl Channel {
 
     // get the channel from a string
-    pub fn from_raw(source: &str) -> Channel {
+    pub fn from_slice(source: &str) -> Channel {
         match source {
             "stable" => Channel::Stable,
             "beta" => Channel::Beta,
@@ -102,7 +102,7 @@ fn parse_config(context: &mut Context, filename: &str, prefix: &mut String) {
                     ":use" => context.load_mode = LoadMode::Indexed(words.pop().expect("[ loader ] [ config ] no index for use specified").parse().expect("[ loader ] [ config ] unable to parse index to use")),
 
                     // specify the channel to load from
-                    ":channel" => context.channel = Channel::from_raw(words.pop().expect("[ loader ] [ config ] no channel specified")),
+                    ":channel" => context.channel = Channel::from_slice(words.pop().expect("[ loader ] [ config ] no channel specified")),
 
                     // set instant load
                     ":instant" => context.instant_load = match words.pop().expect("[ loader ] [ config ] no value for instant-load specified") {
@@ -116,7 +116,7 @@ fn parse_config(context: &mut Context, filename: &str, prefix: &mut String) {
                         let address: u32 = words.pop().expect("[ loader ] [ config ] no ethernet address specified").parse().expect("[ loader ] [ config ] unable to parse address");
                         let index: usize = words.pop().expect("[ loader ] [ config ] no image index specified").parse().expect("[ loader ] [ config ] unable to parse index");
                         let channel = match words.pop() {
-                            Some(word) => Channel::from_raw(word),
+                            Some(word) => Channel::from_slice(word),
                             None => context.channel,
                         };
 
@@ -179,7 +179,7 @@ pub fn parse_parameters() -> Context {
                 "-u" => context.load_mode = LoadMode::Indexed(parameters.pop().expect("[ loader ] [ flag ] no index for use specified").parse().expect("[ loader ] [ flag ] unable to parse index to use")),
 
                 // specify the channel to load from
-                "-r" => context.channel = Channel::from_raw(&parameters.pop().expect("[ loader ] [ config ] no channel specified")),
+                "-r" => context.channel = Channel::from_slice(&parameters.pop().expect("[ loader ] [ config ] no channel specified")),
 
                 // enable instant load
                 "-i" => context.instant_load = true,

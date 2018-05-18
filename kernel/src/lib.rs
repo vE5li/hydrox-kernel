@@ -38,7 +38,7 @@ pub extern fn kernel_main() -> ! {
 #[no_mangle]
 #[lang = "panic_fmt"]
 pub extern fn panic(message: core::fmt::Arguments, file: &'static str, line: u32, column: u32) -> ! {
-    log!("panic in file {} at line {} : {}", file, line, column);
+    log!(" [ panic ] paniced in file {} at line {} : {}", file, line, column);
     log!("{}", message);
     loop{}
 }
