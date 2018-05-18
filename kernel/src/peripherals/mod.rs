@@ -1,3 +1,4 @@
+// raspberry pi 3 peripherals base
 const PERIPHERALS_BASE: usize       = 0x3f000000;
 
 // get the address of a peripheral based on it's offet so the peripherals base
