@@ -1,23 +1,5 @@
-// symbol (macro)
-.macro s identifier
-        \identifier:
-.endm
-
-// aligned symbol (macro)
-.macro sa alignment identifier
-        .balign \alignment
-        \identifier:
-.endm
-
 // global symbol (macro)
 .macro g identifier
-        .global \identifier
-        \identifier:
-.endm
-
-// global aligned symbol (macro)
-.macro ga alignment identifier
-        .balign \alignment
         .global \identifier
         \identifier:
 .endm

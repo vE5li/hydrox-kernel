@@ -59,7 +59,7 @@ sa 16, tag_code_led
 
 // taag to select the power state of any resource
 sa 16, tag_code_power
-        .word   0x00028001
+        .word   0x28001
 
 .section .data
 

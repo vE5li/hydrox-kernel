@@ -21,7 +21,7 @@ pub extern fn kernel_main() -> ! {
     // initialize hardware
     peripherals::initialize();
 
-    // initialize graphics is included
+    // initialize graphics
     #[cfg(feature = "graphics")]
     graphics::initialize();
 
@@ -29,7 +29,7 @@ pub extern fn kernel_main() -> ! {
     log!("started successfully");
 
     // temporary user input handler
-    peripherals::idle();
+    peripherals::input::idle();
 }
 
 // kernel panic

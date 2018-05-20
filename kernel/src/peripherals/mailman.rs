@@ -55,13 +55,13 @@ impl MailboxTag {
     // get the code and data layout of a tag
     pub fn layout(&self) -> (u32, u32, u32) {
         match *self {
-            MailboxTag::SetPowerState => (0x38041, 8, 0),
-            MailboxTag::GetFramebufferSize => (0x40003, 8, 0),
-            MailboxTag::SetPhysicalSize => (0x48003, 8, 8),
-            MailboxTag::SetVirtualSize => (0x48004, 8, 8),
-            MailboxTag::SetFramebufferDepth => (0x48005, 4, 4),
-            MailboxTag::AllocateFramebuffer => (0x40001, 8, 4),
-            MailboxTag::GetFramebufferPitch => (0x40008, 4, 0),
+            MailboxTag::SetPowerState           => (0x38041, 8, 0),
+            MailboxTag::GetFramebufferSize      => (0x40003, 8, 0),
+            MailboxTag::SetPhysicalSize         => (0x48003, 8, 8),
+            MailboxTag::SetVirtualSize          => (0x48004, 8, 8),
+            MailboxTag::SetFramebufferDepth     => (0x48005, 4, 4),
+            MailboxTag::AllocateFramebuffer     => (0x40001, 8, 4),
+            MailboxTag::GetFramebufferPitch     => (0x40008, 4, 0),
         }
     }
 }

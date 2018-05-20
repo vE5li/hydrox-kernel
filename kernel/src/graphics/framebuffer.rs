@@ -53,9 +53,9 @@ pub fn initialize() -> FrameBuffer {
 
     // create the framebuffer structure
     FrameBuffer {
-        base: base,
-        pitch: pitch,
-        width: width,
+        base:   base,
+        pitch:  pitch,
+        width:  width,
         height: height,
     }
 }

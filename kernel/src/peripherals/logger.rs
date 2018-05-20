@@ -1,15 +1,15 @@
-use core::fmt;
-
 // log partial (macro)
 macro_rules! logp {
-    ($($arg:tt)*) => ({$crate::peripherals::logger::log(format_args!($($arg)*));});
+    ($($arg:tt)*)   => ({$crate::peripherals::logger::log(format_args!($($arg)*));});
 }
 
 // log line (macro)
 macro_rules! log {
-    ($fmt:expr) => (logp!(concat!("[ kernel ] ", $fmt, "\n")));
-    ($fmt:expr, $($arg:tt)*) => (logp!(concat!("[ kernel ] ", $fmt, "\n"), $($arg)*));
+    ($fmt:expr)                 => (logp!(concat!("[ kernel ] ", $fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*)    => (logp!(concat!("[ kernel ] ", $fmt, "\n"), $($arg)*));
 }
+
+use core::fmt;
 
 // serial/ethernet logger
 struct Logger {}
