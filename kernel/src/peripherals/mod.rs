@@ -1,19 +1,12 @@
-// get the address of a peripheral based on it's offet so the peripherals base
-macro_rules! peripheral {
-    (gpio)          => ($crate::peripherals::PERIPHERALS_BASE + 0x200000);
-    (mailbox0)      => ($crate::peripherals::PERIPHERALS_BASE + 0xb880);
-    (mailbox1)      => ($crate::peripherals::PERIPHERALS_BASE + 0xb8a0);
-}
-
-// raspberry pi 3 peripherals base
-const PERIPHERALS_BASE: usize       = 0x3f000000;
-
 pub mod interface;
 #[macro_use]
 pub mod logger;
 pub mod mailman;
 pub mod gpio;
 pub mod input;
+
+// raspberry pi 3 peripherals base
+const PERIPHERALS_BASE: usize       = 0x3f000000;
 
 // initialize all peripherals
 pub fn initialize() {

@@ -2,6 +2,9 @@ mod pin;
 
 pub use self::pin::{ Pin, Pull, Function };
 
+// gpio registers base
+const GPIO_BASE: usize      = super::PERIPHERALS_BASE + 0x200000;
+
 // gpio register layout
 #[repr(C)]
 #[allow(dead_code)]
@@ -42,7 +45,7 @@ pub fn set_function(pin: Pin, function: Function) {
     let pin = pin as usize;
     unsafe {
         let offset = (pin % 10) * 3;
-        let registers = peripheral!(gpio) as *mut Registers;
+        let registers = GPIO_BASE as *mut Registers;
         (*registers).fsel[pin / 10] &= !(0b111 << offset);
         (*registers).fsel[pin / 10] |= (function as u32) << offset;
     }
@@ -52,7 +55,7 @@ pub fn set_function(pin: Pin, function: Function) {
 pub fn set_state(pin: Pin, state: bool) {
     let pin = pin as usize;
     unsafe {
-        let registers = peripheral!(gpio) as *mut Registers;
+        let registers = GPIO_BASE as *mut Registers;
         if state {
             match pin {
                 0...31  => (*registers).set[0] = 1 << pin,
@@ -71,7 +74,7 @@ pub fn set_state(pin: Pin, state: bool) {
 pub fn set_pull(pin: Pin, pull: Pull) {
     let pin = pin as usize;
     unsafe {
-        let registers = peripheral!(gpio) as *mut Registers;
+        let registers = GPIO_BASE as *mut Registers;
         (*registers).pud = pull as u32;
 
         // set the pull

@@ -14,7 +14,7 @@
         ldp     \destination1, \destination2, [sp], #16
 .endm
 
-// branch to interface funtion
+// branch to interface funtion (macro)
 .macro bint workspace identifier
         ldr     \workspace, interface_\identifier
         blr     \workspace
@@ -23,7 +23,6 @@
 .section .start
 
 // kernel entry point
-//  sets up a stack and zeros the bss section before calling rusts kernel_main.
 g start
         adr     x0, bss_base
         adr     x1, bss_limit
@@ -45,7 +44,6 @@ g log_character
         ret
 
 // get user input from the bootloader
-//  returns 16 relevant bits; 15-8 = modifier; keys 7-0 = keycode
 g read_event
         push    x1, x30
         bint    x1, read_event

@@ -1,3 +1,7 @@
+// mailbox peripheral addresses
+const MAILBOX0_BASE: usize      = super::PERIPHERALS_BASE + 0xb880;
+const MAILBOX1_BASE: usize      = super::PERIPHERALS_BASE + 0xb8a0;
+
 // bitmasks
 const MAILBOX_EMPTY: u32        = 1 << 30;
 const MAILBOX_FULL: u32         = 1 << 31;
@@ -128,7 +132,7 @@ impl Letter {
     // push request to mailbox
     pub fn send(&self, channel: Channel) {
         unsafe {
-            let registers = peripheral!(mailbox1) as *mut Registers;
+            let registers = MAILBOX1_BASE as *mut Registers;
             while (*registers).status & MAILBOX_FULL != 0 {}
             (*registers).data = &self.buffer as *const _ as u32 | channel as u32;
         }
@@ -138,7 +142,7 @@ impl Letter {
     pub fn receive(&self, channel: Channel) {
         let mut address: u32 = !(channel as u32);
         unsafe {
-            let registers = peripheral!(mailbox0) as *mut Registers;
+            let registers = MAILBOX0_BASE as *mut Registers;
             while address & 0b1111 != channel as u32 {
                 while (*registers).status & MAILBOX_EMPTY != 0 {}
                 address = (*registers).data;

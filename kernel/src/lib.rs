@@ -15,9 +15,6 @@ mod graphics;
 #[no_mangle]
 pub extern fn kernel_main() -> ! {
 
-    // wait for the loader to be able to receive data again
-    for _ in 0..1000 {}
-
     // initialize hardware
     peripherals::initialize();
 
