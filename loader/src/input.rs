@@ -16,10 +16,10 @@ impl KeyState {
     // key state from u8
     pub fn from_u8(value: u8) -> Option<KeyState> {
         match value {
-            0 => Some(KeyState::Release),
-            1 => Some(KeyState::Press),
-            2 => Some(KeyState::Repeat),
-            _ => None,
+            0   => Some(KeyState::Release),
+            1   => Some(KeyState::Press),
+            2   => Some(KeyState::Repeat),
+            _   => None,
         }
     }
 }
@@ -43,13 +43,13 @@ impl Modifier {
     // get a modifer from a string
     pub fn from_slice(source: &str) -> Modifier {
         match source {
-            "capslock" => Modifier::Capslock,
-            "shift" => Modifier::Shift,
-            "control" => Modifier::Control,
-            "super" => Modifier::Super,
-            "alternative" => Modifier::Alternative,
-            "function" => Modifier::Function,
-            name => panic!("[ input ] no modifier key named '{}'", name),
+            "capslock"      => Modifier::Capslock,
+            "shift"         => Modifier::Shift,
+            "control"       => Modifier::Control,
+            "super"         => Modifier::Super,
+            "alternative"   => Modifier::Alternative,
+            "function"      => Modifier::Function,
+            name            => panic!("[ input ] no modifier key named '{}'", name),
         }
     }
 }
@@ -74,8 +74,8 @@ impl InputEvent {
     // input type from u8
     pub fn from_u8(value: u8) -> Option<InputEvent> {
         match value {
-            1 => Some(InputEvent::Keyboard),
-            _ => None,
+            1   => Some(InputEvent::Keyboard),
+            _   => None,
         }
     }
 }
@@ -113,42 +113,42 @@ impl InputHandler {
                 let mut words: Vec<&str> = line.split_whitespace().rev().collect();
                 while let Some(word) = words.pop() {
                     match word {
-                        ":device" => {
-                            input_device_path = Some(words.pop().expect("[ input ] no input device specified").to_string());
+                        ":device"   => {
+                            input_device_path = Some(String::from(words.pop().expect("[ input ] no input device specified")));
                             continue;
                         },
-                        "*" => keycode += 1,
-                        word => keycode = word.parse().expect("[ input ] failed to parse keycode"),
+                        "*"         => keycode += 1,
+                        word        => keycode = word.parse().expect("[ input ] failed to parse keycode"),
                     }
 
                     match words.pop().expect("[ input ] key action specified") {
 
                         // press on event
-                        "press" => {
+                        "press"     => {
                             let parse_code = |source: Option<&str>| {
                                 match source {
-                                    Some(word) => {
+                                    Some(word)  => {
                                         match word.chars().nth(0).unwrap() {
-                                            'b' => Some(word.chars().nth(1).expect("[ input ] no character specified") as u8),
-                                            's' => Some(32),
-                                            ':' => None,
-                                            _ => Some(word.parse().expect("[ input ] failed to parse character")),
+                                            'b'     => Some(word.chars().nth(1).expect("[ input ] no character specified") as u8),
+                                            's'     => Some(32),
+                                            ':'     => None,
+                                            _       => Some(word.parse().expect("[ input ] failed to parse character")),
                                         }
                                     },
-                                    None => None,
+                                    None        => None,
                                 }
                             };
                             translation_table[keycode as usize] = Action::Press(parse_code(words.pop()), parse_code(words.pop()), parse_code(words.pop()));
                         },
 
                         // set modifier on press and release event
-                        "set" => translation_table[keycode as usize] = Action::Set(Modifier::from_slice(words.pop().expect("[ input ] no modifier for set specified"))),
+                        "set"       => translation_table[keycode as usize] = Action::Set(Modifier::from_slice(words.pop().expect("[ input ] no modifier for set specified"))),
 
                         // toggle modifier on press event
-                        "toggle" => translation_table[keycode as usize] = Action::Toggle(Modifier::from_slice(words.pop().expect("[ input ] no modifier for toggle specified"))),
+                        "toggle"    => translation_table[keycode as usize] = Action::Toggle(Modifier::from_slice(words.pop().expect("[ input ] no modifier for toggle specified"))),
 
                         // undefined action
-                        word => panic!("[ input ] undefined action '{}'", word),
+                        word        => panic!("[ input ] undefined action '{}'", word),
                     }
                 }
             }
@@ -173,11 +173,11 @@ impl InputHandler {
                 match event {
 
                     // keyboard input
-                    InputEvent::Keyboard => {
+                    InputEvent::Keyboard    => {
                         let keycode = buffer[18];
                         let key_state = match KeyState::from_u8(buffer[20]) {
-                            Some(state) => state,
-                            None => continue,
+                            Some(state)     => state,
+                            None            => continue,
                         };
 
                         // output raw keycodes
@@ -188,9 +188,9 @@ impl InputHandler {
                         match self.translation_table[keycode as usize] {
 
                             // on pressing and on holding a key, send the transpated character
-                            Action::Press(character, capital, extra) => {
+                            Action::Press(character, capital, extra)    => {
                                 match key_state {
-                                    KeyState::Press | KeyState::Repeat => {
+                                    KeyState::Press | KeyState::Repeat  => {
                                         if self.modifiers & (Modifier::Shift as u8) != 0 {
                                             if self.modifiers & (Modifier::Control as u8) != 0 {
                                                 if let Some(extra) = extra {
@@ -205,29 +205,29 @@ impl InputHandler {
                                             return (self.modifiers, character);
                                         }
                                     },
-                                    _ => continue,
+                                    _                                   => continue,
                                 }
                             },
 
                             // on pressing the key, toggle a modifier
-                            Action::Toggle(modifier) => {
+                            Action::Toggle(modifier)                    => {
                                 match key_state {
-                                    KeyState::Press => self.modifiers ^= modifier as u8,
-                                    _ => continue,
+                                    KeyState::Press     => self.modifiers ^= modifier as u8,
+                                    _                   => continue,
                                 }
                             },
 
                             // on pressing the key the modifier gets activated, on release it gets deactivated
-                            Action::Set(modifier) => {
+                            Action::Set(modifier)                       => {
                                 match key_state {
-                                    KeyState::Release => self.modifiers &= !(modifier as u8),
-                                    KeyState::Press => self.modifiers |= modifier as u8,
-                                    _ => continue,
+                                    KeyState::Release   => self.modifiers &= !(modifier as u8),
+                                    KeyState::Press     => self.modifiers |= modifier as u8,
+                                    _                   => continue,
                                 }
                             },
 
                             // don't process
-                            Action::Drop => continue,
+                            Action::Drop                                => continue,
                         }
                     }
                 }

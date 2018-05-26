@@ -21,21 +21,21 @@ impl Channel {
     // get the channel from a string
     pub fn from_slice(source: &str) -> Channel {
         match source {
-            "stable" => Channel::Stable,
-            "beta" => Channel::Beta,
-            "nightly" => Channel::Nightly,
-            "none" => Channel::None,
-            channel => panic!("[ loader ] [ config ] no channel named '{}'. must be 'stable', 'beta', 'nightly' or 'none'", channel),
+            "stable"    => Channel::Stable,
+            "beta"      => Channel::Beta,
+            "nightly"   => Channel::Nightly,
+            "none"      => Channel::None,
+            channel     => panic!("[ loader ] [ config ] no channel named '{}'. must be 'stable', 'beta', 'nightly' or 'none'", channel),
         }
     }
 
     // get an extention from the channel
     pub fn suffix(&self) -> &'static str {
         match *self {
-            Channel::Stable => ".stable",
-            Channel::Beta => ".beta",
-            Channel::Nightly => ".nightly",
-            Channel::None => "",
+            Channel::Stable     => ".stable",
+            Channel::Beta       => ".beta",
+            Channel::Nightly    => ".nightly",
+            Channel::None       => "",
         }
     }
 }
@@ -84,40 +84,40 @@ fn parse_config(context: &mut Context, filename: &str, prefix: &mut String) {
 
                     // specify a file for input to be translated from
                     #[cfg(feature = "input")]
-                    ":translate" => context.translation_path = words.pop().expect("[ loader ] [ config ] no translation file specified").to_string(),
+                    ":translate"    => context.translation_path = String::from(words.pop().expect("[ loader ] [ config ] no translation file specified")),
 
                     // add a kernel image
-                    ":image" => context.images.push(prefix.clone() + &words.pop().expect("[ loader ] [ config ] no binary filename specified")),
+                    ":image"        => context.images.push(prefix.clone() + &words.pop().expect("[ loader ] [ config ] no binary filename specified")),
 
                     // parse a configuration file
-                    ":config" => parse_config(context, &words.pop().expect("[ loader ] [ config ] no config file specified"), prefix),
+                    ":config"       => parse_config(context, &words.pop().expect("[ loader ] [ config ] no config file specified"), prefix),
 
                     // set serial device path
-                    ":serial" => context.serial_device_path = words.pop().expect("[ loader ] [ config ] no serial device specified").to_string(),
+                    ":serial"       => context.serial_device_path = String::from(words.pop().expect("[ loader ] [ config ] no serial device specified")),
 
                     // set a prefix for the kernel images to be added
-                    ":prefix" => *prefix = words.pop().expect("[ loader ] [ config ] no prefix specified").to_string(),
+                    ":prefix"       => *prefix = String::from(words.pop().expect("[ loader ] [ config ] no prefix specified")),
 
                     // specify index for choosing a kernel image
-                    ":use" => context.load_mode = LoadMode::Indexed(words.pop().expect("[ loader ] [ config ] no index for use specified").parse().expect("[ loader ] [ config ] unable to parse index to use")),
+                    ":use"          => context.load_mode = LoadMode::Indexed(words.pop().expect("[ loader ] [ config ] no index for use specified").parse().expect("[ loader ] [ config ] unable to parse index to use")),
 
                     // specify the channel to load from
-                    ":channel" => context.channel = Channel::from_slice(words.pop().expect("[ loader ] [ config ] no channel specified")),
+                    ":channel"      => context.channel = Channel::from_slice(words.pop().expect("[ loader ] [ config ] no channel specified")),
 
                     // set instant load
-                    ":instant" => context.instant_load = match words.pop().expect("[ loader ] [ config ] no value for instant-load specified") {
-                        "enable" => true,
-                        "disable" => false,
-                        value => panic!("[ loader ] [ config ] undefined instant-load value '{}'. must be 'enable' or 'disable'", value),
+                    ":instant"      => context.instant_load = match words.pop().expect("[ loader ] [ config ] no value for instant-load specified") {
+                        "enable"        => true,
+                        "disable"       => false,
+                        value           => panic!("[ loader ] [ config ] undefined instant-load value '{}'. must be 'enable' or 'disable'", value),
                     },
 
                     // assign a certain ip to a load index
-                    ":assign" => {
+                    ":assign"       => {
                         let address: u32 = words.pop().expect("[ loader ] [ config ] no ethernet address specified").parse().expect("[ loader ] [ config ] unable to parse address");
                         let index: usize = words.pop().expect("[ loader ] [ config ] no image index specified").parse().expect("[ loader ] [ config ] unable to parse index");
                         let channel = match words.pop() {
-                            Some(word) => Channel::from_slice(word),
-                            None => context.channel,
+                            Some(word)  => Channel::from_slice(word),
+                            None        => context.channel,
                         };
 
                         // if the mode is already listed, push the element. otherwise set the mode to listed
@@ -129,7 +129,7 @@ fn parse_config(context: &mut Context, filename: &str, prefix: &mut String) {
                     },
 
                     // invalid setting
-                    _ => panic!("[ loader ] [ config ] unsupported setting '{}'", word),
+                    _               => panic!("[ loader ] [ config ] unsupported setting '{}'", word),
                 }
             }
         }
@@ -164,28 +164,28 @@ pub fn parse_parameters() -> Context {
 
                 // specify a file for input to be translated from
                 #[cfg(feature = "input")]
-                "-t" => context.translation_path = parameters.pop().expect("[ loader ] [ flag ] no translation file specified").to_string(),
+                "-t"    => context.translation_path = String::from(parameters.pop().expect("[ loader ] [ flag ] no translation file specified")),
 
                 // parse a configuration file
-                "-c" => parse_config(&mut context, &parameters.pop().expect("[ loader ] [ flag ] no config file specified"), &mut prefix),
+                "-c"    => parse_config(&mut context, &parameters.pop().expect("[ loader ] [ flag ] no config file specified"), &mut prefix),
 
                 // set serial device path
-                "-s" => context.serial_device_path = parameters.pop().expect("[ loader ] [ flag ] no serial device specified").to_string(),
+                "-s"    => context.serial_device_path = String::from(parameters.pop().expect("[ loader ] [ flag ] no serial device specified")),
 
                 // set a prefix for the kernel images to be added
-                "-p" => prefix = parameters.pop().expect("[ loader ] [ flag ] no prefix specified"),
+                "-p"    => prefix = parameters.pop().expect("[ loader ] [ flag ] no prefix specified"),
 
                 // specify index for choosing a kernel image
-                "-u" => context.load_mode = LoadMode::Indexed(parameters.pop().expect("[ loader ] [ flag ] no index for use specified").parse().expect("[ loader ] [ flag ] unable to parse index to use")),
+                "-u"    => context.load_mode = LoadMode::Indexed(parameters.pop().expect("[ loader ] [ flag ] no index for use specified").parse().expect("[ loader ] [ flag ] unable to parse index to use")),
 
                 // specify the channel to load from
-                "-r" => context.channel = Channel::from_slice(&parameters.pop().expect("[ loader ] [ config ] no channel specified")),
+                "-r"    => context.channel = Channel::from_slice(&parameters.pop().expect("[ loader ] [ config ] no channel specified")),
 
                 // enable instant load
-                "-i" => context.instant_load = true,
+                "-i"    => context.instant_load = true,
 
                 // invalid flag
-                _ => panic!("[ loader ] invalid flag '{}'", word),
+                _       => panic!("[ loader ] invalid flag '{}'", word),
             }
         } else {
             context.images.push(prefix.clone() + &word);
