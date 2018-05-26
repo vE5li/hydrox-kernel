@@ -1,5 +1,5 @@
 # keyboard device file
-:device     /dev/input/by-path/pci-0000:00:04.0-usb-0:1:1.0-event-kbd
+:device     /dev/input/by-path/pci-0000:00:04.1-usb-0:1.2:1.0-event-kbd
 
 # translation
 1   press   27  :   :
@@ -18,7 +18,7 @@
 
 13  press   b´  b`  :
 
-14  press   8   :   :
+14  press   8   127 :
 
 15  press   9   :   :
 

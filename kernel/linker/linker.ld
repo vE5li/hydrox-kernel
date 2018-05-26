@@ -7,7 +7,11 @@ SECTIONS
     . = 0x1010;
     interface_read_event = .;
 
-	. = 0x6000;
+    . = 0x6000;
+    heap_base = .;
+
+    . = 0x8000;
+    stack_base = .;
     kernel_base = .;
 
     .text : {

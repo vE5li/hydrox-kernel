@@ -29,7 +29,7 @@ g start
 0:      str     xzr, [x0], #8
         cmp     x0, x1
         b.lt    0b
-        adr		x30, kernel_base
+        adr		x30, stack_base
         mov 	sp, x30
         b 		kernel_main
 

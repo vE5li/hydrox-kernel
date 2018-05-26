@@ -70,6 +70,13 @@ pub fn set_state(pin: Pin, state: bool) {
     }
 }
 
+// turn gpio pin on and back off after a short delay
+pub fn pulse(pin: Pin) {
+    set_state(pin, true);
+    for _ in 0..2500 {};
+    set_state(pin, false);
+}
+
 // set the resistor for a gpio pin
 pub fn set_pull(pin: Pin, pull: Pull) {
     let pin = pin as usize;

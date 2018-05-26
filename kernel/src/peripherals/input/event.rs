@@ -21,8 +21,8 @@ pub struct Event {
 impl Event {
 
     // get an event structure from a raw u16
-    pub fn from_u16(raw: u16) -> Event {
-        Event {
+    pub fn from_u16(raw: u16) -> Self {
+        Self {
             modifiers:  (raw >> 8) as u8,
             code:       raw as u8,
         }

@@ -70,6 +70,8 @@ impl MailboxTag {
     }
 }
 
+// TODO: implement iterator for buffer
+
 // wrapper for an array to force alignment
 #[repr(align(16))]
 pub struct Letter {
@@ -80,8 +82,8 @@ pub struct Letter {
 impl Letter {
 
     // get a cleared letter
-    pub fn new() -> Letter {
-        Letter {
+    pub fn new() -> Self {
+        Self {
             buffer: [0; BUFFER_LENGTH]
         }
     }

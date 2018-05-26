@@ -51,6 +51,8 @@ pub fn initialize() -> FrameBuffer {
     // frambuffer pitch
     let pitch = letter.buffer()[5] as usize;
 
+    success!("framebuffer initialized");
+
     // create the framebuffer structure
     FrameBuffer {
         base:   base,
