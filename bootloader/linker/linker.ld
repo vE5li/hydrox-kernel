@@ -30,7 +30,7 @@ SECTIONS
         *(.rodata)
     }
 
-    . = 0x6000;
+    . = 0x8000;
 
     kernel_base = .;
 }

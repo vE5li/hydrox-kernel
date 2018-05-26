@@ -161,7 +161,7 @@ s serial_entry
 
 // user interface for the bootloader
 s serial_interface
-        readch   w1
+        readch  w1
         cmp     w1, #13
         b.eq    serial_evaluate_command
         mov     w1, w0
@@ -191,7 +191,7 @@ s serial_clear
 
 // laod the kernel
 s serial_load_kernel
-        readch   w1
+        readch  w1
         cmp     w1, '!'
         b.ne    serial_clear
         adr     x1, kernel_base
