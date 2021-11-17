@@ -2,35 +2,53 @@ ENTRY(start)
 
 SECTIONS
 {
+    kernel_base = .;
+
     .text : {
         KEEP(*(.start))
-    }
-
-    . = 0x1000;
-    interface_log_character = .;
-
-    . = 0x1010;
-    interface_read_event = .;
-
-    . += 8;
-
-    .text : ALIGN(4K) {
-        *(.text)
-    }
-
-    .bss : ALIGN(4K) {
-        *(.bss)
-    }
-
-    .data : ALIGN(4K) {
-        *(.data)
+        *(.text .text.*)
     }
 
     .rodata : ALIGN(4K) {
-        *(.rodata)
+	   *(.rodata .rodata.*)
     }
 
-    . = 0x8000;
+    .data : ALIGN(4K) {
+        *(.data .data.*)
+    }
 
-    kernel_base = .;
+    .bss : ALIGN(4K) {
+        bss_base = .;
+        *(.bss .bss.*)
+        . = ALIGN(16);
+        bss_limit = .;
+    }
+
+    .got : ALIGN(4K) {
+        *(.got)
+    }
+
+    .got.plt : ALIGN(4K) {
+        *(.got.plt)
+    }
+
+    .data.rel.ro : ALIGN(4K) {
+        *(.data.rel.ro.local*)
+        *(.data.rel.ro .data.rel.ro.*)
+    }
+
+    .gcc_except_table : ALIGN(4K) {
+        *(.gcc_except_table)
+    }
+
+    . = ALIGN(4K);
+    stack_base = .;
+    . += 0x8000; /* COMPLETE OVERKILL (?) */
+
+    . = 0x40000;
+    heap_base = .;
+    . = 0x41000;
+
+	. = ALIGN(4K); /* should be unnecessary */
+	kernel_limit = .;
 }

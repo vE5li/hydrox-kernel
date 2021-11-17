@@ -2,80 +2,88 @@
 LINKER_DIR ?= linker
 BINARY_DIR ?= binary
 SOURCE_DIR ?= src
-IMAGE ?= /image/raspbian.img
+IMAGE ?= raspios.img
 
 # compiler
-CROSS ?= aarch64-elf-
-LFLAGS ?= -nostdlib
+CROSS ?= aarch64-none-elf-
+#LASM_FLAGS ?= -nostdlib
 
-# targets
-TARGET ?= /card
-STARGET ?= /dev/serial0
-DEVICE ?= /dev/sdb
+# mount points
+MOUNT_POINT ?= /mnt
+DEVICE ?= /dev/sda
 
 # output files
-LOADER_ELF ?= $(LINKER_DIR)/bootloader.elf
+#LOADER_ELF ?= $(LINKER_DIR)/bootloader.elf
 OUTPUT ?= $(BINARY_DIR)/bootloader.bin
 
 # files
 CLEAN_FILES := overlays start_*.elf kernel7.img kernel.img issue.txt COPYING.linux LICENCE.broadcom LICENSE.oracle *.dtb fixup_cd.dat fixup_db.dat fixup_x.dat
-SOURCE_FILES := macros.s peripherals.s string.s mailman.s serial.s ethernet.s start.s
-UNITY := $(LINKER_DIR)/unity.s.o
-CONFIG := $(TARGET)/config.txt
+SOURCE_FILES := start.s.o
+#UNITY := $(LINKER_DIR)/unity.s.o
+CONFIG := $(MOUNT_POINT)/config.txt
+
+# xargo
+LFLAGS ?= -lgcc -nostdlib -Wl,--build-id=none
+RUST_TARGET ?= aarch64-alb1
+RUST_OUTPUT := target/$(RUST_TARGET)/release/libalb1.a
+KERNEL_ELF := $(LINKER_DIR)/kernel.elf
 
 # build
-all: build
+all: build link
 
 # remove the object files
 clean:
-	rm $(UNITY)
+	#rm $(UNITY)
 
-# build the bootloader
-build: link
-	$(CROSS)objcopy $(LOADER_ELF) -O binary $(OUTPUT)
+# assemble the source code
+%.s.o: $(SOURCE_DIR)/%.s
+	$(CROSS)as -o $(LINKER_DIR)/$@ $<
 
-# assemble the source files into one object file
-assemble: $(addprefix $(SOURCE_DIR)/, $(SOURCE_FILES))
-	$(CROSS)as -o $(UNITY) $^
+# compile the master rust code with almost all features
+build:
+	RUST_TARGET_PATH=$(shell pwd) xargo build --release --target=$(RUST_TARGET)
 
-# link the object file
-link: assemble
-	$(CROSS)ld -o $(LOADER_ELF) -T $(LINKER_DIR)/linker.ld $(UNITY) $(LFLAGS)
+# link the rust and the assembly with gcc
+link: $(SOURCE_FILES)
+	$(CROSS)gcc -o $(KERNEL_ELF) -T $(LINKER_DIR)/linker.ld $(addprefix $(LINKER_DIR)/, $^) $(RUST_OUTPUT) $(LFLAGS)
+	$(CROSS)objcopy $(KERNEL_ELF) -O binary $(OUTPUT)
 
 # mount the sd-card
 mount:
-	mountpoint -q $(TARGET) || mount $(DEVICE)1 $(TARGET)
-	@ls $(TARGET)
+	mountpoint -q $(MOUNT_POINT) || mount $(DEVICE)1 $(MOUNT_POINT)
+	@ls $(MOUNT_POINT)
 
 # unmount the sd-card
 unmount:
-	mountpoint -q $(TARGET) && umount $(TARGET) || :
+	mountpoint -q $(MOUNT_POINT) && umount $(MOUNT_POINT) || :
 
 # install a blank raspbian image
 zero: unmount
 	dd bs=4M conv=fsync if=$(IMAGE) of=$(DEVICE) || :
 
 # copy the bootloader.bin to the sd-card
-copy: build mount
-	cp -f $(OUTPUT) $(TARGET)/
+#copy: build mount
+copy: mount
+	cp -f $(OUTPUT) $(MOUNT_POINT)/
 
+# arm_boost=1 ?
 # overwrite the config file
 config: copy
 	echo "kernel_old=1" > $(CONFIG)
 	echo "disable_splash=1" >> $(CONFIG)
 	echo "kernel=bootloader.bin" >> $(CONFIG)
-	echo "arm_control=0x200" >> $(CONFIG)
+	echo "arm_64bit=1" >> $(CONFIG)
 	echo "disable_commandline_tags=1" >> $(CONFIG)
 	echo "disable_overscan=1" >> $(CONFIG)
 	echo "framebuffer_swap=0" >> $(CONFIG)
 	echo "enable_uart=1" >> $(CONFIG)
 	echo "force_turbo=1" >> $(CONFIG)
 	echo "boot_delay=1" >> $(CONFIG)
-	rm -rf $(addprefix $(TARGET)/, $(CLEAN_FILES))
+	rm -rf $(addprefix $(MOUNT_POINT)/, $(CLEAN_FILES))
 
 # make a workiing
 export: zero config
 
 # show disassembled code
 opcode: build
-	$(CROSS)objdump -d $(LOADER_ELF)
+	$(CROSS)objdump -d $(KERNEL_ELF)
