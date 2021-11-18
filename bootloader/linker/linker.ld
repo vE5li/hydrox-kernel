@@ -43,11 +43,11 @@ SECTIONS
 
     . = ALIGN(4K);
     stack_base = .;
-    . += 0x8000; /* COMPLETE OVERKILL (?) */
+    . += 0xf000;
 
     . = 0x40000;
     heap_base = .;
-    . = 0x41000;
+    . = 0x4f000;
 
 	. = ALIGN(4K); /* should be unnecessary */
 	kernel_limit = .;

@@ -20,5 +20,5 @@ pub fn initialize() {
     //set_function(Pin::V5, Function::Output);
     //set_function(Pin::V6, Function::Output);
 
-    //success!("peripherals initialized");
+    success!("peripherals initialized");
 }
