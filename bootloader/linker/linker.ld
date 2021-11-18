@@ -2,6 +2,11 @@ ENTRY(start)
 
 SECTIONS
 {
+    . = 0x60000; /* COMPLETE OVERKILL */
+    stack_base = .; /* stack grows down, so allocate with some space */
+    heap_base = .;
+
+    . = 0x80000;
     kernel_base = .;
 
     .text : {
@@ -41,14 +46,6 @@ SECTIONS
         *(.gcc_except_table)
     }
 
-    . = ALIGN(4K);
-    stack_base = .;
-    . += 0xf000;
-
-    . = 0x40000;
-    heap_base = .;
-    . = 0x4f000;
-
-	. = ALIGN(4K); /* should be unnecessary */
+	. = ALIGN(4K);
 	kernel_limit = .;
 }

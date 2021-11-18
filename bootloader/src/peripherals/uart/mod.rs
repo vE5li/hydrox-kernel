@@ -60,6 +60,13 @@ pub fn is_write_byte_ready() -> bool {
     }
 }
 
+pub fn is_read_byte_ready() -> bool {
+    unsafe {
+        let registers = UART_BASE as *mut Registers;
+        return read_volatile(&(*registers).aux_mu_lsr_reg) & 0x01 != 0;
+    }
+}
+
 pub fn write_character_blocking(character: char) {
 
     while !is_write_byte_ready() { };
@@ -67,5 +74,15 @@ pub fn write_character_blocking(character: char) {
     unsafe {
         let registers = UART_BASE as *mut Registers;
         write_volatile(&mut (*registers).aux_mu_io_reg, character as u32);
+    }
+}
+
+pub fn read_character_blocking() -> char {
+
+    while !is_read_byte_ready() { };
+
+    unsafe {
+        let registers = UART_BASE as *mut Registers;
+        return read_volatile(&(*registers).aux_mu_io_reg) as u8 as char;
     }
 }
