@@ -16,6 +16,8 @@ use core::alloc::Layout;
 use core::panic::PanicInfo;
 use peripherals::uart::*;
 use peripherals::gpio::*;
+use peripherals::mailbox::*;
+use alloc::string::String;
 
 #[global_allocator]
 static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x60000, 0x20000);
@@ -26,6 +28,16 @@ pub extern fn kernel_main() -> ! {
     peripherals::initialize();
 
     let mut framebuffer = graphics::initialize();
+
+    log_line!("turning on status led");
+
+    let mut message = Message::<20>::new();
+    message.clear_tags();
+    message.push_tag(MailboxTag::SetLEDStatus, &[42, 1]); // 42 = status
+    message.push_tag(MailboxTag::SetLEDStatus, &[130, 1]); // 130 = power (state is inverted)
+    message.push_end_tag();
+    message.send(Channel::Tags);
+    message.receive(Channel::Tags);
 
     success!("kernel initialized");
 
@@ -43,9 +55,7 @@ pub extern fn kernel_main() -> ! {
 
     log_line!("starting graphics test");
 
-    framebuffer.draw_rectangle(0, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
-    framebuffer.draw_rectangle(40, 0, 30, 30, 0xAA5500, 0xAA5500);
-    framebuffer.draw_rectangle(80, 0, 30, 30, 0xAA0000, 0x0000AA);
+    framebuffer.draw_rectangle(500, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
 
     // heap allocation test
 

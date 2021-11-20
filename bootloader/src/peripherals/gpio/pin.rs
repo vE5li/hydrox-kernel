@@ -79,7 +79,7 @@ pub enum Pin {
 }
 
 #[allow(dead_code)]
-impl Pin {
+impl Pin { // TODO fix this mapping
     pub const P3: Pin = Pin::V2;
     pub const P5: Pin = Pin::V3;
     pub const P7: Pin = Pin::V4;

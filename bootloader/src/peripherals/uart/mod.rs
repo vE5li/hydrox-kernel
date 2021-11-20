@@ -69,6 +69,10 @@ pub fn is_read_byte_ready() -> bool {
 
 pub fn write_character_blocking(character: char) {
 
+    if character == '\n' {
+        write_character_blocking('\r');
+    }
+
     while !is_write_byte_ready() { };
 
     unsafe {
