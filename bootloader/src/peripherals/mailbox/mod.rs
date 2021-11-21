@@ -1,4 +1,3 @@
-use core::ptr::{ read_volatile, write_volatile };
 use core::cmp::max;
 
 const MAILBOX0_BASE: usize = super::PERIPHERALS_BASE + 0xb880;
@@ -7,13 +6,11 @@ const MAILBOX1_BASE: usize = super::PERIPHERALS_BASE + 0xb8a0;
 const MAILBOX_EMPTY: u32 = 1 << 30;
 const MAILBOX_FULL: u32 = 1 << 31;
 
-const BUFFER_LENGTH: usize = 32;
-
 pub type Buffer<const N: usize> = [u32; N];
 
 #[repr(C)]
 #[allow(dead_code)]
-struct Registers {
+struct MailboxRegisters {
     data:       u32,
     _unused:    [u32; 3],
     poll:       u32,
@@ -84,10 +81,6 @@ impl<const N: usize> Message<N> {
         }
     }
 
-    pub fn clear(&mut self) {
-        self.buffer[0] = 0;
-    }
-
     pub fn clear_tags(&mut self) {
         self.buffer[0] = 8;
         self.buffer[1] = 0;
@@ -124,22 +117,22 @@ impl<const N: usize> Message<N> {
     }
 
     pub fn send(&self, channel: Channel) {
-        unsafe {
-            let registers = MAILBOX1_BASE as *mut Registers;
-            while read_volatile(&(*registers).status) & MAILBOX_FULL != 0 {}
-            let data = &self.buffer as *const _ as u32 | channel as u32;
-            write_volatile(&mut (*registers).data, data);
-        }
+
+        let registers = MAILBOX1_BASE as *mut MailboxRegisters;
+        let buffer_with_channel = &self.buffer as *const _ as u32 | channel as u32;
+
+        while read_register!(registers, status) & MAILBOX_FULL != 0 {}
+        write_register!(registers, data, buffer_with_channel);
     }
 
     pub fn receive(&self, channel: Channel) {
+
+        let registers = MAILBOX0_BASE as *mut MailboxRegisters;
         let mut address: u32 = !(channel as u32);
-        unsafe {
-            let registers = MAILBOX0_BASE as *mut Registers;
-            while address & 0b1111 != channel as u32 {
-                while read_volatile(&(*registers).status) & MAILBOX_EMPTY != 0 {}
-                address = read_volatile(&(*registers).data);
-            };
+
+        while address & 0b1111 != channel as u32 {
+            while read_register!(registers, status) & MAILBOX_EMPTY != 0 {}
+            address = read_register!(registers, data);
         }
 
         if self.buffer[1] == 0x80000001 {
@@ -153,8 +146,6 @@ impl<const N: usize> Message<N> {
     pub fn tag_index(&self, tag: MailboxTag) -> Option<usize> {
         let (code, _, _) = tag.layout();
         let mut index = 2;
-
-        use peripherals::uart::write_character_blocking;
 
         while index < N {
 

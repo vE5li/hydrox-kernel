@@ -159,10 +159,7 @@ impl Framebuffer {
     pub fn new(address: usize, pitch: usize, width: usize, height: usize, size: usize) -> Self {
 
         let bytes_per_pixel = size / height / width;
-
-        log!("[ graphics ] monitor bytes per pixel: ");
-        ::peripherals::logger::log_hex(bytes_per_pixel as usize);
-        log!("\n\r");
+        log_line!("[ graphics ] monitor bytes per pixel: 0x{:x}", bytes_per_pixel);
 
         return Self { address, pitch, size, width, height, bytes_per_pixel };
     }
@@ -180,11 +177,11 @@ impl Framebuffer {
             unsafe { *((self.address + offset) as *const u32 as *mut u32) = color; }
 
         } else {
-            panic!("unsupported bytes per pixel");
+            panic!("{:x} bytes per pixel is unsupported", self.bytes_per_pixel); // remove :x
         }
     }
 
-    pub fn draw_rectangle(&mut self, x_position: usize, y_position: usize, width: usize, height: usize, border_color: u32, fill_color: u32) {
+    pub fn draw_rectangle(&mut self, x_position: usize, y_position: usize, width: usize, height: usize, fill_color: u32, border_color: u32) {
         for y in y_position..y_position + height + 1 {
             for x in x_position..x_position + width + 1 {
                 if (x == x_position || x == x_position + width + 1) || (y == y_position || y == y_position + height + 1) {
@@ -212,7 +209,7 @@ impl Framebuffer {
         }
     }
 
-    pub fn draw_text(&mut self, mut x_position: usize, mut y_position: usize, text: &str, color: u32) {
+    pub fn draw_text(&mut self, mut x_position: usize, y_position: usize, text: &str, color: u32) {
         for byte in text.as_bytes().iter() { // use as bytes instead of chars for performance reasons
             self.draw_character(x_position, y_position, *byte as char, color);
             x_position += FONT_WIDTH;
@@ -229,21 +226,13 @@ pub fn initialize() -> Framebuffer {
     message.send(Channel::Tags);
     message.receive(Channel::Tags);
 
-    let mut width = message.buffer()[5];
-    let mut height = message.buffer()[6];
+    let width = message.buffer()[5];
+    let height = message.buffer()[6];
 
-    log!("[ graphics ] monitor width: ");
-    ::peripherals::logger::log_hex(width as usize);
-    log!("\n\r");
+    log_line!("[ graphics ] monitor width: 0x{:x}", width); // remove :x
+    log_line!("[ graphics ] monitor height: 0x{:x}", height); // remove :x
 
-    log!("[ graphics ] monitor height: ");
-    ::peripherals::logger::log_hex(height as usize);
-    log!("\n\r");
-
-    //if width | height == 0 { // OR: early return without creating a frame buffer
-    //    width = 640;
-    //    height = 480;
-    //}
+    //if width | height == 0 -> early return without creating a frame buffer
 
     let mut message = Message::<64>::new();
     message.clear_tags();
@@ -275,27 +264,14 @@ pub fn initialize() -> Framebuffer {
     let index = message.tag_index(MailboxTag::GetFramebufferPitch).expect("invalid get framebuffer pitch response");
     let pitch = message.buffer()[index + 3] as usize;
 
-    log!("[ graphics ] framebuffer depth: ");
-    ::peripherals::logger::log_hex(depth);
-    log!("\n\r");
-    log!("[ graphics ] framebuffer alpha mode: ");
-    ::peripherals::logger::log_hex(alpha_mode);
-    log!("\n\r");
-    log!("[ graphics ] framebuffer pixel order: ");
-    ::peripherals::logger::log_hex(pixel_order);
-    log!("\n\r");
-    log!("[ graphics ] framebuffer address: ");
-    ::peripherals::logger::log_hex(address);
-    log!("\n\r");
-    log!("[ graphics ] framebuffer size: ");
-    ::peripherals::logger::log_hex(size);
-    log!("\n\r");
-    log!("[ graphics ] framebuffer pitch: ");
-    ::peripherals::logger::log_hex(pitch);
-    log!("\n\r");
+    log_line!("[ graphics ] framebuffer depth: 0x{:x}", depth); // remove :x
+    log_line!("[ graphics ] framebuffer alpha mode: 0x{:x}", alpha_mode); // remove :x
+    log_line!("[ graphics ] framebuffer pixel order: 0x{:x}", pixel_order); // remove :x
+    log_line!("[ graphics ] framebuffer address: 0x{:x}", address);
+    log_line!("[ graphics ] framebuffer size: 0x{:x}", size); // remove :x
+    log_line!("[ graphics ] framebuffer pitch: 0x{:x}", pitch); // remove :x
 
     let framebuffer = Framebuffer::new(address, pitch, width as usize, height as usize, size);
-
     ::peripherals::logger::set_framebuffer(framebuffer.clone()); // TEMP (?)
 
     success!("framebuffer initialized");

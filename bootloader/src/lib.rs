@@ -1,4 +1,5 @@
 #![feature(allocator_api)]
+#![feature(panic_info_message)]
 #![feature(lang_items)]
 #![feature(asm)]
 #![no_builtins]
@@ -17,7 +18,7 @@ use core::panic::PanicInfo;
 use peripherals::uart::*;
 use peripherals::gpio::*;
 use peripherals::mailbox::*;
-use alloc::string::String;
+//use alloc::string::String;
 
 #[global_allocator]
 static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x60000, 0x20000);
@@ -56,16 +57,20 @@ pub extern fn kernel_main() -> ! {
     log_line!("starting graphics test");
 
     framebuffer.draw_rectangle(500, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
+    framebuffer.draw_text(500, 40, "i am rectangular", 0xAAAAAA);
 
     // heap allocation test
 
     log_line!("starting allocation test");
 
-    let boxed = alloc::boxed::Box::new(50u32);
+    let boxed = alloc::boxed::Box::new(50);
 
     if *boxed != 50 {
-        panic!("incorrect box value");
+        panic!("incorrect value in box");
     }
+
+    //let heap_string = String::from("i live on the heap");
+    //framebuffer.draw_text(500, 40, &heap_string, 0xAAAAAA);
 
     success!("allocation test passed");
 
@@ -81,6 +86,7 @@ pub extern fn kernel_main() -> ! {
 
 #[no_mangle]
 #[lang = "oom"]
+#[allow(improper_ctypes_definitions)]
 pub extern fn oom(_layout: Layout) -> ! {
     error!("out of memory");
     loop {}
@@ -92,7 +98,16 @@ pub extern fn eh_personality() {
 }
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    error!("kernel panic");
+fn panic(info: &PanicInfo) -> ! {
+    log_line!("[ kernel ] [ panic ] fatal error");
+
+    if let Some(location) = info.location() {
+        // location.caller
+        log_line!("file {}; line 0x{:x}; column 0x{:x}", location.file(), location.line(), location.column());
+    }
+
+    if let Some(message) = info.message() {
+        peripherals::logger::log(*message);
+    }
     loop {}
 }

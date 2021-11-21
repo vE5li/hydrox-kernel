@@ -1,14 +1,12 @@
 mod pin;
 
-use core::ptr::{ read_volatile, write_volatile };
-
 pub use self::pin::{ Pin, Pull, Function };
 
 const GPIO_BASE: usize = super::PERIPHERALS_BASE + 0x200000;
 
 #[repr(C)]
 #[allow(dead_code)]
-struct Registers {
+struct GPIORegisters {
     fsel:           [u32; 6],
     _reserved0:     u32,
     set:            [u32; 2],
@@ -37,63 +35,44 @@ struct Registers {
 
 pub fn idle(cycles: usize) {
     for _ in 0..cycles {
-        unsafe {
-            asm!("nop");
-        }
+        unsafe { asm!("nop"); }
     }
 }
 
 pub fn set_function(pin: Pin, function: Function) {
-    let pin = pin as usize;
-    unsafe {
-        let registers = GPIO_BASE as *mut Registers;
-        let offset = (pin % 10) * 3;
-        let fsel = &mut (*registers).fsel[pin / 10];
 
-        let mut value = read_volatile(fsel);
-        value &= !(0b111 << offset);
-        value |= (function as u32) << offset;
-        write_volatile(fsel, value);
-    }
+    let registers = GPIO_BASE as *mut GPIORegisters;
+    let left_shift = (pin as usize % 10) * 3;
+    let index = pin as usize / 10;
+
+    let mut value = read_register!(registers, fsel, index);
+    value &= !(0b111 << left_shift);
+    value |= (function as u32) << left_shift;
+    write_register!(registers, fsel, index, value);
 }
 
 pub fn set_state(pin: Pin, state: bool) {
-    let pin = pin as usize;
-    unsafe {
-        let registers = GPIO_BASE as *mut Registers;
-        if state {
-            match pin {
-                0..=31  => write_volatile(&mut (*registers).set[0], 1 << pin),
-                _       => write_volatile(&mut (*registers).set[1], 1 << (pin - 32)),
-            }
-        } else {
-            match pin {
-                0..=31  => write_volatile(&mut (*registers).clr[0], 1 << pin),
-                _       => write_volatile(&mut (*registers).clr[1], 1 << (pin - 32)),
-            }
-        }
+
+    let registers = GPIO_BASE as *mut GPIORegisters;
+    let index = (pin as usize > 32) as usize; // convert bool to 0 or 1
+    let left_shift = pin as usize - (32 * index);
+
+    match state {
+        true => write_register!(registers, set, index, 1 << left_shift),
+        false => write_register!(registers, clr, index, 1 << left_shift),
     }
 }
 
 pub fn set_pull(pin: Pin, pull: Pull) {
-    let pin = pin as usize;
-    unsafe {
-        let registers = GPIO_BASE as *mut Registers;
-        write_volatile(&mut (*registers).pud, pull as u32);
 
-        // set the pull
-        idle(150);
-        match pin {
-            0..=31  => write_volatile(&mut (*registers).pudclk[0], 1 << pin),
-            _       => write_volatile(&mut (*registers).pudclk[1], 1 << (pin - 32)),
-        }
-        idle(150);
+    let registers = GPIO_BASE as *mut GPIORegisters;
+    let index = (pin as usize > 32) as usize; // convert bool to 0 or 1
+    let left_shift = pin as usize - (32 * index);
 
-        // clear previously used registers
-        write_volatile(&mut (*registers).pud, 0);
-        match pin {
-            0..=31  => write_volatile(&mut (*registers).pudclk[0], 0),
-            _       => write_volatile(&mut (*registers).pudclk[1], 0),
-        }
-    }
+    write_register!(registers, pud, pull as u32);
+    idle(150);
+    write_register!(registers, pudclk, index, 1 << left_shift);
+    idle(150);
+    write_register!(registers, pud, 0);
+    write_register!(registers, pudclk, index, 0);
 }

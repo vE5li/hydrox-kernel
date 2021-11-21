@@ -1,4 +1,6 @@
 #[macro_use]
+pub mod register;
+#[macro_use]
 pub mod logger;
 pub mod gpio;
 pub mod uart;

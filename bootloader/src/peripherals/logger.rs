@@ -41,11 +41,6 @@ impl Logger {
 
 impl Write for Logger {
 
-    fn write_fmt(mut self: &mut Self, args: Arguments<'_>) -> Result {
-        self.write_str(args.as_str().unwrap()); // TEMP
-        return Ok(());
-    }
-
     fn write_str(&mut self, message: &str) -> Result {
         use peripherals::uart::write_character_blocking;
 
@@ -57,7 +52,7 @@ impl Write for Logger {
                 if *byte as char == '\n' {
                     self.cursor_x = 0;
 
-                    if self.cursor_y == 500 {
+                    if self.cursor_y == 500 { // total_lines * (FONT_HEIGHT + gap)
                         let line_byte_size = framebuffer.bytes_per_pixel * framebuffer.width * 10; // FONT_HEIGHT + gap
                         let second_line_address = framebuffer.address + line_byte_size;
                         let size = framebuffer.size - line_byte_size * 2;
@@ -85,19 +80,4 @@ pub fn set_framebuffer(framebuffer: ::graphics::Framebuffer) {
 
 pub fn log(args: Arguments) {
     unsafe { LOGGER.write_fmt(args).unwrap(); }
-}
-
-pub fn log_hex(number: usize) {
-    use peripherals::uart::write_character_blocking;
-
-    write_character_blocking('0');
-    write_character_blocking('x');
-
-    for index in (0..16).rev() {
-        let byte = (number >> (index * 4)) & 0b1111;
-        let character = match byte {
-            0..=9 => write_character_blocking((48 + byte) as u8 as char),
-            _bigger => write_character_blocking((87 + byte) as u8 as char),
-        };
-    }
 }
