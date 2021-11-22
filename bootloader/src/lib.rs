@@ -18,7 +18,7 @@ use core::panic::PanicInfo;
 use peripherals::uart::*;
 use peripherals::gpio::*;
 use peripherals::mailbox::*;
-//use alloc::string::String;
+use alloc::string::String;
 
 #[global_allocator]
 static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x60000, 0x20000);
@@ -56,8 +56,8 @@ pub extern fn kernel_main() -> ! {
 
     log_line!("starting graphics test");
 
-    framebuffer.draw_rectangle(500, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
-    framebuffer.draw_text(500, 40, "i am rectangular", 0xAAAAAA);
+    framebuffer.draw_rectangle(600, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
+    framebuffer.draw_text(600, 40, "i am rectangular", 0xAAAAAA);
 
     // heap allocation test
 
@@ -69,8 +69,9 @@ pub extern fn kernel_main() -> ! {
         panic!("incorrect value in box");
     }
 
-    //let heap_string = String::from("i live on the heap");
-    //framebuffer.draw_text(500, 40, &heap_string, 0xAAAAAA);
+    let mut heap_string = String::new();
+    heap_string.push_str("hi");
+    success!("{}", heap_string);
 
     success!("allocation test passed");
 
@@ -99,15 +100,19 @@ pub extern fn eh_personality() {
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    log_line!("[ kernel ] [ panic ] fatal error");
+    // location.caller
 
     if let Some(location) = info.location() {
-        // location.caller
-        log_line!("file {}; line 0x{:x}; column 0x{:x}", location.file(), location.line(), location.column());
+        match info.message() {
+            Some(message) => log_line!("[ panic ] {} {}:{}: {}", location.file(), location.line(), location.column(), message),
+            None => log_line!("[ panic ] {} {}:{}", location.file(), location.line(), location.column()),
+        }
+    } else {
+        match info.message() {
+            Some(message) => log_line!("[ panic ] {}", message),
+            None => log_line!("[ panic ]"),
+        }
     }
 
-    if let Some(message) = info.message() {
-        peripherals::logger::log(*message);
-    }
     loop {}
 }

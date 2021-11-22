@@ -134,6 +134,7 @@ const FONT: [[u8; 8]; 128] = [
     [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ], // U+007F
 ];
 
+#[derive(Clone)]
 pub struct Framebuffer {
     pub address: usize,
     pub pitch: usize,
@@ -145,21 +146,10 @@ pub struct Framebuffer {
 
 impl Framebuffer {
 
-    fn clone(&self) -> Self {
-        return Self {
-            address: self.address,
-            pitch: self.pitch,
-            size: self.size,
-            width: self.width,
-            height: self.height,
-            bytes_per_pixel: self.bytes_per_pixel,
-        };
-    }
-
     pub fn new(address: usize, pitch: usize, width: usize, height: usize, size: usize) -> Self {
 
         let bytes_per_pixel = size / height / width;
-        log_line!("[ graphics ] monitor bytes per pixel: 0x{:x}", bytes_per_pixel);
+        log_line!("[ graphics ] monitor bytes per pixel: {}", bytes_per_pixel);
 
         return Self { address, pitch, size, width, height, bytes_per_pixel };
     }
@@ -177,7 +167,7 @@ impl Framebuffer {
             unsafe { *((self.address + offset) as *const u32 as *mut u32) = color; }
 
         } else {
-            panic!("{:x} bytes per pixel is unsupported", self.bytes_per_pixel); // remove :x
+            panic!("{} bytes per pixel is unsupported", self.bytes_per_pixel);
         }
     }
 
@@ -229,8 +219,8 @@ pub fn initialize() -> Framebuffer {
     let width = message.buffer()[5];
     let height = message.buffer()[6];
 
-    log_line!("[ graphics ] monitor width: 0x{:x}", width); // remove :x
-    log_line!("[ graphics ] monitor height: 0x{:x}", height); // remove :x
+    log_line!("[ graphics ] monitor width: {}", width); // remove :x
+    log_line!("[ graphics ] monitor height: {}", height); // remove :x
 
     //if width | height == 0 -> early return without creating a frame buffer
 
@@ -264,12 +254,12 @@ pub fn initialize() -> Framebuffer {
     let index = message.tag_index(MailboxTag::GetFramebufferPitch).expect("invalid get framebuffer pitch response");
     let pitch = message.buffer()[index + 3] as usize;
 
-    log_line!("[ graphics ] framebuffer depth: 0x{:x}", depth); // remove :x
-    log_line!("[ graphics ] framebuffer alpha mode: 0x{:x}", alpha_mode); // remove :x
-    log_line!("[ graphics ] framebuffer pixel order: 0x{:x}", pixel_order); // remove :x
+    log_line!("[ graphics ] framebuffer depth: {}", depth);
+    log_line!("[ graphics ] framebuffer alpha mode: {}", alpha_mode);
+    log_line!("[ graphics ] framebuffer pixel order: {}", pixel_order);
     log_line!("[ graphics ] framebuffer address: 0x{:x}", address);
-    log_line!("[ graphics ] framebuffer size: 0x{:x}", size); // remove :x
-    log_line!("[ graphics ] framebuffer pitch: 0x{:x}", pitch); // remove :x
+    log_line!("[ graphics ] framebuffer size: {}", size);
+    log_line!("[ graphics ] framebuffer pitch: {}", pitch);
 
     let framebuffer = Framebuffer::new(address, pitch, width as usize, height as usize, size);
     ::peripherals::logger::set_framebuffer(framebuffer.clone()); // TEMP (?)
