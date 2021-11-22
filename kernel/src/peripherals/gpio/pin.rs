@@ -1,13 +1,11 @@
-// gpio resistor state
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum Pull {
-    Off,
+    None,
     Down,
     Up,
 }
 
-// gpio pin functions
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum Function {
@@ -21,93 +19,92 @@ pub enum Function {
     Alternate3,
 }
 
-// virtual pins
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum Pin {
-    V0      = 0,
-    V1      = 1,
-    V2      = 2,
-    V3      = 3,
-    V4      = 4,
-    V5      = 5,
-    V6      = 6,
-    V7      = 7,
-    V8      = 8,
-    V9      = 9,
-    V10     = 10,
-    V11     = 11,
-    V12     = 12,
-    V13     = 13,
-    V14     = 14,
-    V15     = 15,
-    V16     = 16,
-    V17     = 17,
-    V18     = 18,
-    V19     = 19,
-    V20     = 20,
-    V21     = 21,
-    V22     = 22,
-    V23     = 23,
-    V24     = 24,
-    V25     = 25,
-    V26     = 26,
-    V27     = 27,
-    V28     = 28,
-    V29     = 29,
-    V30     = 30,
-    V31     = 31,
-    V32     = 32,
-    V33     = 33,
-    V34     = 34,
-    V35     = 35,
-    V36     = 36,
-    V37     = 37,
-    V38     = 38,
-    V39     = 39,
-    V40     = 40,
-    V41     = 41,
-    V42     = 42,
-    V43     = 43,
-    V44     = 44,
-    V45     = 45,
-    V46     = 46,
-    V47     = 47,
-    V48     = 48,
-    V49     = 49,
-    V50     = 50,
-    V51     = 51,
-    V52     = 52,
-    V53     = 53,
+    Virtual0,
+    Virtual1,
+    Virtual2,
+    Virtual3,
+    Virtual4,
+    Virtual5,
+    Virtual6,
+    Virtual7,
+    Virtual8,
+    Virtual9,
+    Virtual10,
+    Virtual11,
+    Virtual12,
+    Virtual13,
+    Virtual14,
+    Virtual15,
+    Virtual16,
+    Virtual17,
+    Virtual18,
+    Virtual19,
+    Virtual20,
+    Virtual21,
+    Virtual22,
+    Virtual23,
+    Virtual24,
+    Virtual25,
+    Virtual26,
+    Virtual27,
+    Virtual28,
+    Virtual29,
+    Virtual30,
+    Virtual31,
+    Virtual32,
+    Virtual33,
+    Virtual34,
+    Virtual35,
+    Virtual36,
+    Virtual37,
+    Virtual38,
+    Virtual39,
+    Virtual40,
+    Virtual41,
+    Virtual42,
+    Virtual43,
+    Virtual44,
+    Virtual45,
+    Virtual46,
+    Virtual47,
+    Virtual48,
+    Virtual49,
+    Virtual50,
+    Virtual51,
+    Virtual52,
+    Virtual53,
 }
 
-// physical pins
 #[allow(dead_code)]
+#[allow(non_upper_case_globals)]
 impl Pin {
-    pub const P3: Pin   = Pin::V2;
-    pub const P5: Pin   = Pin::V3;
-    pub const P7: Pin   = Pin::V4;
-    pub const P8: Pin   = Pin::V14;
-    pub const P10: Pin  = Pin::V15;
-    pub const P11: Pin  = Pin::V17;
-    pub const P12: Pin  = Pin::V18;
-    pub const P13: Pin  = Pin::V27;
-    pub const P15: Pin  = Pin::V22;
-    pub const P16: Pin  = Pin::V23;
-    pub const P18: Pin  = Pin::V24;
-    pub const P19: Pin  = Pin::V10;
-    pub const P21: Pin  = Pin::V9;
-    pub const P22: Pin  = Pin::V25;
-    pub const P23: Pin  = Pin::V11;
-    pub const P24: Pin  = Pin::V8;
-    pub const P26: Pin  = Pin::V7;
-    pub const P29: Pin  = Pin::V5;
-    pub const P31: Pin  = Pin::V6;
-    pub const P32: Pin  = Pin::V12;
-    pub const P33: Pin  = Pin::V13;
-    pub const P35: Pin  = Pin::V19;
-    pub const P36: Pin  = Pin::V16;
-    pub const P37: Pin  = Pin::V26;
-    pub const P38: Pin  = Pin::V20;
-    pub const P40: Pin  = Pin::V21;
+    pub const Physical3: Pin = Pin::Virtual2;
+    pub const Physical5: Pin = Pin::Virtual3;
+    pub const Physical7: Pin = Pin::Virtual4;
+    pub const Physical8: Pin = Pin::Virtual14;
+    pub const Physical10: Pin = Pin::Virtual15;
+    pub const Physical11: Pin = Pin::Virtual17;
+    pub const Physical12: Pin = Pin::Virtual18;
+    pub const Physical13: Pin = Pin::Virtual27;
+    pub const Physical15: Pin = Pin::Virtual22;
+    pub const Physical16: Pin = Pin::Virtual23;
+    pub const Physical18: Pin = Pin::Virtual24;
+    pub const Physical19: Pin = Pin::Virtual10;
+    pub const Physical21: Pin = Pin::Virtual9;
+    pub const Physical22: Pin = Pin::Virtual25;
+    pub const Physical23: Pin = Pin::Virtual11;
+    pub const Physical24: Pin = Pin::Virtual8;
+    pub const Physical26: Pin = Pin::Virtual7;
+    pub const Physical29: Pin = Pin::Virtual5;
+    pub const Physical31: Pin = Pin::Virtual6;
+    pub const Physical32: Pin = Pin::Virtual12;
+    pub const Physical33: Pin = Pin::Virtual13;
+    pub const Physical35: Pin = Pin::Virtual19;
+    pub const Physical36: Pin = Pin::Virtual16;
+    pub const Physical37: Pin = Pin::Virtual26;
+    pub const Physical38: Pin = Pin::Virtual20;
+    pub const Physical40: Pin = Pin::Virtual21;
 }

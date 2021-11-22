@@ -1,46 +1,38 @@
-use alloc::heap::{ GlobalAlloc, Layout, Opaque };
+use alloc::alloc::{ GlobalAlloc, Layout };
 use core::sync::atomic::{ AtomicUsize, Ordering };
 
-// heap allocator
 pub struct Allocator {
-    next:   AtomicUsize,
-    base:   usize,
-    limit:  usize,
+    next: AtomicUsize,
+    _address: usize,
+    limit: usize,
 }
 
-// implement allocator
 impl Allocator {
 
-    // new instance
-    pub const fn new(base: usize, size: usize) -> Self {
-        Self {
-            next:   AtomicUsize::new(base),
-            base:   base,
-            limit:  base + size,
-        }
+    pub const fn new(address: usize, size: usize) -> Self {
+        return Self {
+            next: AtomicUsize::new(address),
+            _address: address,
+            limit: address + size,
+        };
     }
 }
 
-// impolement global allocator for the heap allocator
 unsafe impl GlobalAlloc for Allocator {
 
-    // allocate memory on the heap
-    unsafe fn alloc(&self, layout: Layout) -> *mut Opaque {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let current = self.next.load(Ordering::Relaxed); // TODO: replace with swap
-        let base = align_up(current, layout.align());
-        let limit = base.saturating_add(layout.size());
+        let address = align_up(current, layout.align());
+        let limit = address.saturating_add(layout.size());
 
-        // assert bounds
         assert!(limit <= self.limit, "heap out of memory");
         self.next.store(limit, Ordering::Relaxed); // TODO: replace with swap
-        base as *mut Opaque
+        address as *mut u8
     }
 
-    // deallocate memory
-    unsafe fn dealloc(&self, ptr: *mut Opaque, layout: Layout) {}
+    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {}
 }
 
-// align address down to fit alignment
 pub fn align_down(address: usize, alignment: usize) -> usize {
     if alignment == 0 {
         address
@@ -50,7 +42,6 @@ pub fn align_down(address: usize, alignment: usize) -> usize {
     }
 }
 
-// align address up
 pub fn align_up(address: usize, alignment: usize) -> usize {
     align_down(address + alignment - 1, alignment)
 }

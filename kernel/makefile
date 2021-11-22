@@ -1,102 +1,82 @@
 # directories
 LINKER_DIR ?= linker
+BINARY_DIR ?= binary
 SOURCE_DIR ?= src
-OUTPUT_DIR ?= binary
-
-# targets
-STARGET ?= /dev/ttyUSB0
-RTARGET ?= aarch64-alb1
-
-# loader
-ECONFIG ?= ethernet.load
-SCONFIG ?= serial.load
+IMAGE ?= raspios.img
 
 # compiler
-ED ?= master
-LFLAGS ?= -lgcc -nostdlib -Wl,--build-id=none
-KERNEL_BIN ?= $(OUTPUT_DIR)/kernel_$(ED).bin
-OUTPUT ?= $(KERNEL_BIN).nightly
-CROSS ?= aarch64-elf-
+CROSS ?= aarch64-none-elf-
+#LASM_FLAGS ?= -nostdlib
+
+# mount points
+MOUNT_POINT ?= /mnt
+DEVICE ?= /dev/sda
+
+# output files
+OUTPUT ?= $(BINARY_DIR)/kernel.bin
 
 # files
-KERNEL_ELF := $(LINKER_DIR)/kernel.elf
-ROUTPUT := target/$(RTARGET)/debug/libalb1_kernel.a
-CLEAN_FILES := $(LINKER_DIR)/kernel.* $(LINKER_DIR)/*.s.o
+CLEAN_FILES := overlays start_*.elf kernel7.img kernel.img issue.txt COPYING.linux LICENCE.broadcom LICENSE.oracle *.dtb fixup_cd.dat fixup_db.dat fixup_x.dat
 SOURCE_FILES := start.s.o
+#UNITY := $(LINKER_DIR)/unity.s.o
+CONFIG := $(MOUNT_POINT)/config.txt
 
 # xargo
-XARGO := RUST_TARGET_PATH=$(shell pwd) xargo build --target=$(RTARGET)
+LFLAGS ?= -lgcc -nostdlib -Wl,--build-id=none
+RUST_TARGET ?= aarch64-alb1
+RUST_OUTPUT := target/$(RUST_TARGET)/release/libalb1.a
+KERNEL_ELF := $(LINKER_DIR)/kernel.elf
 
 # build
-all: build
+all: build link
 
-# remove object files and clean cargo
+# remove the object files
 clean:
-	rm -f $(CLEAN_FILES)
-	cargo clean
-
-# build the kernel
-build: build_$(ED) link
+	#rm $(UNITY)
 
 # assemble the source code
 %.s.o: $(SOURCE_DIR)/%.s
 	$(CROSS)as -o $(LINKER_DIR)/$@ $<
 
+# compile the master rust code with almost all features
+build:
+	RUST_TARGET_PATH=$(shell pwd) xargo build --release --target=$(RUST_TARGET)
+
 # link the rust and the assembly with gcc
 link: $(SOURCE_FILES)
-	$(CROSS)gcc -o $(KERNEL_ELF) -T $(LINKER_DIR)/linker.ld $(addprefix $(LINKER_DIR)/, $^) $(ROUTPUT) $(LFLAGS)
+	$(CROSS)gcc -o $(KERNEL_ELF) -T $(LINKER_DIR)/linker.ld $(addprefix $(LINKER_DIR)/, $^) $(RUST_OUTPUT) $(LFLAGS)
 	$(CROSS)objcopy $(KERNEL_ELF) -O binary $(OUTPUT)
 
-# compile the master rust code with almost all features
-build_master:
-	$(XARGO) --features graphics
+# mount the sd-card
+mount:
+	mountpoint -q $(MOUNT_POINT) || mount $(DEVICE)1 $(MOUNT_POINT)
+	@ls $(MOUNT_POINT)
 
-# compile the headless rust code
-build_headless:
-	$(XARGO)
+# unmount the sd-card
+unmount:
+	mountpoint -q $(MOUNT_POINT) && umount $(MOUNT_POINT) || :
 
-# list all sections inside pre linking
-sections:
-	$(CROSS)objdump -h $(ROUTPUT)
-	size -A -d $(ROUTPUT)
-	$(CROSS)objdump -h $(LINKER_DIR)/*.s.o
-	size -A -d $(LINKER_DIR)/*.s.o
-	$(CROSS)objdump -h $(KERNEL_ELF)
-	size -A -d $(KERNEL_ELF)
+# install a blank raspbian image
+zero: unmount
+	dd bs=4M conv=fsync if=$(IMAGE) of=$(DEVICE) || :
+
+# copy the kernel.bin to the sd-card
+copy: mount
+	cp -f $(OUTPUT) $(MOUNT_POINT)/
+
+# arm_boost=1 ?
+# overwrite the config file
+config: copy
+	echo "arm_64bit=1" > $(CONFIG)
+	echo "kernel=kernel.bin" >> $(CONFIG)
+	echo "disable_commandline_tags=1" >> $(CONFIG)
+	echo "core_freq_min=500" >> $(CONFIG)
+	echo "dtoverlay=disable-bt=500" >> $(CONFIG)
+	rm -rf $(addprefix $(MOUNT_POINT)/, $(CLEAN_FILES))
+
+# make a workiing
+export: zero config
 
 # show disassembled code
 opcode: build
 	$(CROSS)objdump -d $(KERNEL_ELF)
-
-# open a serial terminal for interfacing with the bootloader and load the kernel
-screen:
-	@screen $(STARGET) 115200
-	@stty -echo
-	@loader -c $(SCONFIG) -i
-	@stty echo
-	@screen $(STARGET) 115200
-
-# start the loader in serial mode
-serial:
-	@stty -echo
-	@loader -c $(SCONFIG)
-	@stty echo
-
-# start the loader in ethernet mode
-ethernet:
-	@stty -echo
-	@loader -c $(ECONFIG)
-	@stty echo
-
-# recompile every edition
-rebuild: clean
-	make ED=master
-	make ED=headless
-
-# move beta to stable
-stable: rebuild
-	cp -f $(KERNEL_BIN).beta $(KERNEL_BIN).stable
-
-# move nightly to beta
-beta: rebuild
-	cp -f $(KERNEL_BIN).nightly $(KERNEL_BIN).beta

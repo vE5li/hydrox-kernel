@@ -2,13 +2,11 @@ mod pin;
 
 pub use self::pin::{ Pin, Pull, Function };
 
-// gpio registers base
-const GPIO_BASE: usize      = super::PERIPHERALS_BASE + 0x200000;
+const GPIO_BASE: usize = super::PERIPHERALS_BASE + 0x200000;
 
-// gpio register layout
 #[repr(C)]
 #[allow(dead_code)]
-struct Registers {
+struct GPIORegisters {
     fsel:           [u32; 6],
     _reserved0:     u32,
     set:            [u32; 2],
@@ -35,68 +33,46 @@ struct Registers {
     pudclk:         [u32; 2],
 }
 
-// idle for at least 150 cycles
-pub fn idle() {
-    for _ in 0..150 {}
+pub fn idle(cycles: usize) {
+    for _ in 0..cycles {
+        unsafe { asm!("nop"); }
+    }
 }
 
-// select a gpio pin function
 pub fn set_function(pin: Pin, function: Function) {
-    let pin = pin as usize;
-    unsafe {
-        let offset = (pin % 10) * 3;
-        let registers = GPIO_BASE as *mut Registers;
-        (*registers).fsel[pin / 10] &= !(0b111 << offset);
-        (*registers).fsel[pin / 10] |= (function as u32) << offset;
-    }
+
+    let registers = GPIO_BASE as *mut GPIORegisters;
+    let left_shift = (pin as usize % 10) * 3;
+    let index = pin as usize / 10;
+
+    let mut value = read_register!(registers, fsel, index);
+    value &= !(0b111 << left_shift);
+    value |= (function as u32) << left_shift;
+    write_register!(registers, fsel, index, value);
 }
 
-// set the state of a gpio pin
 pub fn set_state(pin: Pin, state: bool) {
-    let pin = pin as usize;
-    unsafe {
-        let registers = GPIO_BASE as *mut Registers;
-        if state {
-            match pin {
-                0...31  => (*registers).set[0] = 1 << pin,
-                _       => (*registers).set[1] = 1 << (pin - 32),
-            }
-        } else {
-            match pin {
-                0...31  => (*registers).clr[0] = 1 << pin,
-                _       => (*registers).clr[1] = 1 << (pin - 32),
-            }
-        }
+
+    let registers = GPIO_BASE as *mut GPIORegisters;
+    let index = (pin as usize > 32) as usize; // convert bool to 0 or 1
+    let left_shift = pin as usize - (32 * index);
+
+    match state {
+        true => write_register!(registers, set, index, 1 << left_shift),
+        false => write_register!(registers, clr, index, 1 << left_shift),
     }
 }
 
-// turn gpio pin on and back off after a short delay
-pub fn pulse(pin: Pin) {
-    set_state(pin, true);
-    for _ in 0..2500 {};
-    set_state(pin, false);
-}
-
-// set the resistor for a gpio pin
 pub fn set_pull(pin: Pin, pull: Pull) {
-    let pin = pin as usize;
-    unsafe {
-        let registers = GPIO_BASE as *mut Registers;
-        (*registers).pud = pull as u32;
 
-        // set the pull
-        idle();
-        match pin {
-            0..32   => (*registers).pudclk[0] = 1 << pin,
-            _       => (*registers).pudclk[1] = 1 << (pin - 32),
-        }
-        idle();
+    let registers = GPIO_BASE as *mut GPIORegisters;
+    let index = (pin as usize > 32) as usize; // convert bool to 0 or 1
+    let left_shift = pin as usize - (32 * index);
 
-        // clear previously used registers
-        (*registers).pud = 0;
-        match pin {
-            0..32   => (*registers).pudclk[0] = 0,
-            _       => (*registers).pudclk[1] = 0,
-        }
-    }
+    write_register!(registers, pud, pull as u32);
+    idle(150);
+    write_register!(registers, pudclk, index, 1 << left_shift);
+    idle(150);
+    write_register!(registers, pud, 0);
+    write_register!(registers, pudclk, index, 0);
 }

@@ -1,11 +1,5 @@
-// convert a bus address to a physical address
-macro_rules! bus_physical {
-    ($base:expr)    => ($base & 0x3fffffff);
-}
-
 pub mod heap;
 
-// copy memory
 #[no_mangle]
 pub extern fn memcpy(destination: *mut u8, source: *const u8, length: usize) -> *mut u8 {
     let mut offset = 0;
@@ -16,7 +10,6 @@ pub extern fn memcpy(destination: *mut u8, source: *const u8, length: usize) -> 
     return destination;
 }
 
-// move memory
 #[no_mangle]
 pub extern fn memmove(destination: *mut u8, source: *const u8, length: usize) -> *mut u8 {
     if source < destination as *const u8 {
@@ -35,7 +28,6 @@ pub extern fn memmove(destination: *mut u8, source: *const u8, length: usize) ->
     return destination;
 }
 
-// set memory
 #[no_mangle]
 pub extern fn memset(destination: *mut u8, source: i32, length: usize) -> *mut u8 {
     let mut offset = 0;
@@ -46,7 +38,6 @@ pub extern fn memset(destination: *mut u8, source: i32, length: usize) -> *mut u
     return destination;
 }
 
-// compare memory
 #[no_mangle]
 pub extern fn memcmp(source1: *const u8, source2: *const u8, length: usize) -> i32 {
     let mut offset = 0;

@@ -1,10 +1,14 @@
+pub mod font;
 pub mod framebuffer;
 
-// initialize all graphics
-pub fn initialize() {
+pub use self::font::*;
+pub use self::framebuffer::Framebuffer;
 
-    // get a framebuffer
+pub fn initialize() -> Framebuffer {
+
     let framebuffer = framebuffer::initialize();
 
     success!("graphics initialized");
+
+    return framebuffer;
 }

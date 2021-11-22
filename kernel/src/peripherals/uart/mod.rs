@@ -38,10 +38,10 @@ pub fn initialize() {
     write_register!(registers, aux_mu_iir_reg, 0xC6);
     write_register!(registers, aux_mu_baud_reg, (UART_CLOCK / (BAUD_RATE * 8)) - 1);
 
-    set_pull(Pin::V14, Pull::None);
-    set_function(Pin::V14, Function::Alternate5);
-    set_pull(Pin::V15, Pull::None);
-    set_function(Pin::V15, Function::Alternate5);
+    set_pull(Pin::Virtual14, Pull::None);
+    set_function(Pin::Virtual14, Function::Alternate5);
+    set_pull(Pin::Virtual15, Pull::None);
+    set_function(Pin::Virtual15, Function::Alternate5);
 
     write_register!(registers, aux_mu_cntl_reg, 0x3);
 

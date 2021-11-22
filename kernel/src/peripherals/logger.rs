@@ -1,48 +1,83 @@
-// log partial (macro)
-macro_rules! logp {
+macro_rules! log {
     ($($arguments:tt)*)   => ({$crate::peripherals::logger::log(format_args!($($arguments)*));});
 }
 
-// log line (macro)
-macro_rules! log {
-    ($format:expr)                      => (logp!(concat!("[ kernel ] ", $format, "\n")));
-    ($format:expr, $($arguments:tt)*)   => (logp!(concat!("[ kernel ] ", $format, "\n"), $($arguments)*));
+macro_rules! log_line {
+    ($format:expr)                      => (log!(concat!("[ kernel ] ", $format, "\n")));
+    ($format:expr, $($arguments:tt)*)   => (log!(concat!("[ kernel ] ", $format, "\n"), $($arguments)*));
 }
 
-// log an error message (macro)
 macro_rules! error {
-    ($format:expr)                      => (log!(concat!("[ error ] ", $format)));
-    ($format:expr, $($arguments:tt)*)   => (log!(concat!("[ error ] ", $format), $($arguments)*));
+    ($format:expr)                      => (log_line!(concat!("[ error ] ", $format)));
+    ($format:expr, $($arguments:tt)*)   => (log_line!(concat!("[ error ] ", $format), $($arguments)*));
 }
 
-// log a success (macro)
 macro_rules! success {
-    ($format:expr)                      => (log!(concat!("[ success ] ", $format)));
-    ($format:expr, $($arguments:tt)*)   => (log!(concat!("[ success ] ", $format), $($arguments)*));
+    ($format:expr)                      => (log_line!(concat!("[ success ] ", $format)));
+    ($format:expr, $($arguments:tt)*)   => (log_line!(concat!("[ success ] ", $format), $($arguments)*));
 }
 
-use core::fmt;
+use core::fmt::{ Write, Arguments, Result };
 
-// serial/ethernet logger
-struct Logger {}
+struct Logger {
+    framebuffer: Option<::graphics::Framebuffer>,
+    cursor_x: usize,
+    cursor_y: usize,
+}
 
-// implement fmt::write for the logger
-impl fmt::Write for Logger {
+impl Logger {
 
-    // writing formatted fmt::Arguments
-    fn write_str(&mut self, message: &str) -> fmt::Result {
-        for character in message.chars() {
-            unsafe { super::interface::log_character(character as u8); }
-        }
-        Ok(())
+    pub const fn new() -> Self {
+        let framebuffer = None;
+        let cursor_x = 0;
+        let cursor_y = 0;
+        return Self { framebuffer, cursor_x, cursor_y };
+    }
+
+    pub fn set_framebuffer(&mut self, framebuffer: ::graphics::Framebuffer) {
+        self.framebuffer = Some(framebuffer);
     }
 }
 
-// static instance
-static mut LOGGER: Logger = Logger {};
+impl Write for Logger {
 
-// log function called by the macros
-pub fn log(args: fmt::Arguments) {
-    use core::fmt::Write;
+    fn write_str(&mut self, message: &str) -> Result {
+        use peripherals::uart::write_character_blocking;
+
+        // use as bytes instead of chars to improve performance
+        message.as_bytes().iter().for_each(|byte| {
+            write_character_blocking(*byte as char);
+
+            if let Some(framebuffer) = &mut self.framebuffer {
+                if *byte as char == '\n' {
+                    self.cursor_x = 0;
+
+                    if self.cursor_y == 500 { // total_lines * (FONT_HEIGHT + gap)
+                        let line_byte_size = framebuffer.bytes_per_pixel * framebuffer.width * 10; // FONT_HEIGHT + gap
+                        let second_line_address = framebuffer.address + line_byte_size;
+                        let size = framebuffer.size - line_byte_size * 2;
+                        ::memory::memmove(framebuffer.address as *const u8 as *mut u8, second_line_address as *const u8 as *mut u8, size);
+                    } else {
+                        self.cursor_y += 10; // FONT_HEIGHT + gap
+                    }
+
+                } else {
+                    framebuffer.draw_character(self.cursor_x, self.cursor_y, *byte as char, 0xAAAAAA, 0x000000);
+                    self.cursor_x += 8;
+                }
+            }
+        });
+
+        return Ok(());
+    }
+}
+
+static mut LOGGER: Logger = Logger::new();
+
+pub fn set_framebuffer(framebuffer: ::graphics::Framebuffer) {
+    unsafe { LOGGER.set_framebuffer(framebuffer); }
+}
+
+pub fn log(args: Arguments) {
     unsafe { LOGGER.write_fmt(args).unwrap(); }
 }

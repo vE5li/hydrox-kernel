@@ -1,17 +1,14 @@
+ENTRY(start)
+
 SECTIONS
 {
-    . = 0x1000;
-    interface_base = .;
-    interface_log_character = .;
+    . = 0x60000; /* COMPLETE OVERKILL */
+    stack_base = .; /* stack grows down, so allocate with some space */
 
-    . = 0x1010;
-    interface_read_event = .;
-
-    . = 0x6000;
+    . = 0x70000;
     heap_base = .;
 
-    . = 0x8000;
-    stack_base = .;
+    . = 0x80000;
     kernel_base = .;
 
     .text : {

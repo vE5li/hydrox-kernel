@@ -1,5 +1,0 @@
-:translate  external.map
-:channel    stable
-:prefix     binary/kernel_
-:image      master.bin
-:image      headless.bin
