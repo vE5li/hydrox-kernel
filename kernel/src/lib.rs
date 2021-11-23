@@ -62,6 +62,15 @@ pub extern fn kernel_main() -> ! {
     message.set_led_status_request(OnBoardLed::Power, false);
     message.finalize_send_receive(Channel::Tags);
 
+    log_line!("fetch device temperature");
+
+    let mut message = Message::<20>::new();
+    message.get_temperature_request();
+    message.finalize_send_receive(Channel::Tags);
+
+    let temperature = message.get_temperature_response();
+    log_line!("[ device ] temperature: {}C", temperature / 1000);
+
     // gpio test
 
     log_line!("starting gpio test");

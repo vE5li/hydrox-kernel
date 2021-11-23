@@ -342,4 +342,13 @@ impl<const N: usize> Message<N> {
     pub fn get_framebuffer_pitch_response(&self) -> u32 {
         return *self.buffer_as_struct(MailboxTag::GetFramebufferPitch);
     }
+
+    pub fn get_temperature_request(&mut self) {
+        return self.push_tag(MailboxTag::GetTemperature, &[1]);
+    }
+
+    pub fn get_temperature_response(&self) -> u32 {
+        let buffer = self.buffer_as_struct::<[u32; 2]>(MailboxTag::GetTemperature);
+        return buffer[1];
+    }
 }
