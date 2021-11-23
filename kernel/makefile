@@ -23,8 +23,8 @@ CONFIG := $(MOUNT_POINT)/config.txt
 
 # xargo
 LFLAGS ?= -lgcc -nostdlib -Wl,--build-id=none
-RUST_TARGET ?= aarch64-alb1
-RUST_OUTPUT := target/$(RUST_TARGET)/release/libalb1.a
+RUST_TARGET ?= aarch64-feo-kernel
+RUST_OUTPUT := target/$(RUST_TARGET)/release/libfeo_kernel.a
 KERNEL_ELF := $(LINKER_DIR)/kernel.elf
 
 # build
