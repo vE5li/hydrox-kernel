@@ -26,12 +26,12 @@ impl Framebuffer {
 
         if self.bytes_per_pixel == 2 {
 
-            let offset = (y_position * (self.width * 2)) + (x_position * 2);
+            let offset = (y_position * self.pitch) + (x_position * 2);
             unsafe { *((self.address + offset) as *const u16 as *mut u16) = color as u16; }
 
         } else if self.bytes_per_pixel == 4 {
 
-            let offset = (y_position * (self.width * 4)) + (x_position * 4);
+            let offset = (y_position * self.pitch) + (x_position * 4);
             unsafe { *((self.address + offset) as *const u32 as *mut u32) = color; }
 
         } else {
@@ -88,29 +88,33 @@ pub fn initialize() -> Framebuffer {
     message.set_physical_size_request(framebuffer_size);
     message.set_virtual_size_request(framebuffer_size);
     message.set_virtual_offset_request(0, 0);
-    message.set_framebuffer_depth_request(16);
+    message.set_framebuffer_depth_request(32);
     message.set_alpha_mode_request(AlphaMode::Ignored);
     message.set_pixel_order_request(1);
     message.allocate_framebuffer_request(4096);
     message.get_framebuffer_pitch_request();
     message.finalize_send_receive(Channel::Tags);
 
-    let depth = message.set_framebuffer_depth_response();
+    let virtual_size = message.set_virtual_size_response();
+    let pyhsical_size = message.set_physical_size_response();
+    let framebuffer_depth = message.set_framebuffer_depth_response();
     let alpha_mode = message.set_alpha_mode_response();
     let pixel_order = message.set_pixel_order_response();
     let framebuffer_layout = message.allocate_framebuffer_response();
     let pitch = message.get_framebuffer_pitch_response();
     let address = framebuffer_layout.address as usize & 0x3FFFFFFF;
 
-    log_line!("[ graphics ] framebuffer depth: {}", depth);
+    let framebuffer = Framebuffer::new(address, pitch as usize, framebuffer_size.width as usize, framebuffer_size.height as usize, framebuffer_layout.size as usize);
+    ::peripherals::logger::set_framebuffer(framebuffer.clone());
+
+    log_line!("[ graphics ] virtual size: {}", virtual_size);
+    log_line!("[ graphics ] physical size: {}", pyhsical_size);
+    log_line!("[ graphics ] framebuffer depth: {}", framebuffer_depth);
     log_line!("[ graphics ] framebuffer alpha mode: {:?}", alpha_mode);
     log_line!("[ graphics ] framebuffer pixel order: {}", pixel_order);
     log_line!("[ graphics ] framebuffer address: 0x{:x}", address);
     log_line!("[ graphics ] framebuffer size: {}", framebuffer_layout.size);
     log_line!("[ graphics ] framebuffer pitch: {}", pitch);
-
-    let framebuffer = Framebuffer::new(address, pitch as usize, framebuffer_size.width as usize, framebuffer_size.height as usize, framebuffer_layout.size as usize);
-    ::peripherals::logger::set_framebuffer(framebuffer.clone());
 
     success!("framebuffer initialized");
 

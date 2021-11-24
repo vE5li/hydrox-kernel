@@ -64,13 +64,6 @@ pub extern fn kernel_main() -> ! {
 
     log_line!("fetch device temperature");
 
-    let mut message = Message::<20>::new();
-    message.get_temperature_request();
-    message.finalize_send_receive(Channel::Tags);
-
-    let temperature = message.get_temperature_response();
-    log_line!("[ device ] temperature: {}C", temperature / 1000);
-
     // gpio test
 
     log_line!("starting gpio test");
@@ -105,6 +98,14 @@ pub extern fn kernel_main() -> ! {
     log_line!("starting echo test");
 
     loop {
+
+        let mut message = Message::<20>::new();
+        message.get_temperature_request();
+        message.finalize_send_receive(Channel::Tags);
+
+        let temperature = message.get_temperature_response();
+        log_line!("[ device ] temperature: {}C", temperature / 1000);
+
         let character = read_character_blocking();
         write_character_blocking(character);
     }

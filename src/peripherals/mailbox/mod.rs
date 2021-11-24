@@ -295,8 +295,16 @@ impl<const N: usize> Message<N> {
         return self.push_tag(MailboxTag::SetPhysicalSize, &[framebuffer_size.width, framebuffer_size.height]);
     }
 
+    pub fn set_physical_size_response(&mut self) -> FramebufferSize {
+        return *self.buffer_as_struct(MailboxTag::SetPhysicalSize);
+    }
+
     pub fn set_virtual_size_request(&mut self, framebuffer_size: FramebufferSize) {
         return self.push_tag(MailboxTag::SetVirtualSize, &[framebuffer_size.width, framebuffer_size.height]);
+    }
+
+    pub fn set_virtual_size_response(&mut self) -> FramebufferSize {
+        return *self.buffer_as_struct(MailboxTag::SetVirtualSize);
     }
 
     pub fn set_virtual_offset_request(&mut self, offset_x: u32, offset_y: u32) {

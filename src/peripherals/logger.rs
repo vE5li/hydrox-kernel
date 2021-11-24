@@ -23,6 +23,7 @@ struct Logger {
     framebuffer: Option<::graphics::Framebuffer>,
     cursor_x: usize,
     cursor_y: usize,
+    line_count: usize,
 }
 
 impl Logger {
@@ -31,10 +32,12 @@ impl Logger {
         let framebuffer = None;
         let cursor_x = 0;
         let cursor_y = 0;
-        return Self { framebuffer, cursor_x, cursor_y };
+        let line_count = 0;
+        return Self { framebuffer, cursor_x, cursor_y, line_count };
     }
 
     pub fn set_framebuffer(&mut self, framebuffer: ::graphics::Framebuffer) {
+        self.line_count = framebuffer.height / 12; // FONT_HEIGHT + gap
         self.framebuffer = Some(framebuffer);
     }
 }
@@ -52,13 +55,14 @@ impl Write for Logger {
                 if *byte as char == '\n' {
                     self.cursor_x = 0;
 
-                    if self.cursor_y == 500 { // total_lines * (FONT_HEIGHT + gap)
-                        let line_byte_size = framebuffer.bytes_per_pixel * framebuffer.width * 10; // FONT_HEIGHT + gap
+                    if self.cursor_y >= (self.line_count - 1) * 12 { // total_lines * (FONT_HEIGHT + gap)
+                        let line_byte_size = framebuffer.bytes_per_pixel * framebuffer.width * 12; // FONT_HEIGHT + gap
                         let second_line_address = framebuffer.address + line_byte_size;
-                        let size = framebuffer.size - line_byte_size * 2;
-                        ::memory::memmove(framebuffer.address as *const u8 as *mut u8, second_line_address as *const u8 as *mut u8, size);
+                        let size = framebuffer.size - line_byte_size;
+                        ::memory::fast_memcpy(framebuffer.address as *const u64 as *mut u64, second_line_address as *const u64, size / 8);
+                        ::memory::fast_memset((framebuffer.address + size) as *const u64 as *mut u64, 0, (framebuffer.size - size) / 8);
                     } else {
-                        self.cursor_y += 10; // FONT_HEIGHT + gap
+                        self.cursor_y += 12; // FONT_HEIGHT + gap
                     }
 
                 } else {

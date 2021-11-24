@@ -1,5 +1,15 @@
 pub mod heap;
 
+pub fn fast_memcpy(destination: *mut u64, source: *const u64, length: usize) -> *mut u64 {
+    (0..length).for_each(|offset| unsafe { *destination.offset(offset as isize) = *source.offset(offset as isize) });
+    return destination;
+}
+
+pub fn fast_memset(destination: *mut u64, source: u64, length: usize) -> *mut u64 {
+    (0..length).for_each(|offset| unsafe { *destination.offset(offset as isize) = source });
+    return destination;
+}
+
 #[no_mangle]
 pub extern fn memcpy(destination: *mut u8, source: *const u8, length: usize) -> *mut u8 {
     (0..length).for_each(|offset| unsafe { *destination.offset(offset as isize) = *source.offset(offset as isize) });
