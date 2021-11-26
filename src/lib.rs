@@ -83,7 +83,7 @@ pub extern fn kernel_main() -> ! {
 
     log_line!("starting graphics test");
 
-    framebuffer.draw_rectangle(600, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
+    framebuffer.draw_rectangle(600, 0, 30, 30, 0xff0000, 0x00ff00);
     framebuffer.draw_text(600, 40, "i am rectangular", 0x00FF00, 0x000000);
 
     // heap allocation test

@@ -42,7 +42,7 @@ impl Framebuffer {
     pub fn draw_rectangle(&mut self, x_position: usize, y_position: usize, width: usize, height: usize, fill_color: u32, border_color: u32) {
         for y in y_position..y_position + height + 1 {
             for x in x_position..x_position + width + 1 {
-                if (x == x_position || x == x_position + width + 1) || (y == y_position || y == y_position + height + 1) {
+                if (x <= x_position + 3 || x >= x_position + width - 3) || (y <= y_position + 3 || y >= y_position + height - 3) {
                     self.draw_pixel(x, y, border_color);
                 } else {
                     self.draw_pixel(x, y, fill_color);
