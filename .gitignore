@@ -1,0 +1,5 @@
+ZEITGEIST
+Cargo.lock
+target/
+*.elf
+*.s.o

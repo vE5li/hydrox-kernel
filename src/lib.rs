@@ -1,146 +1,153 @@
+#![feature(allocator_api)]
+#![feature(panic_info_message)]
+#![feature(lang_items)]
+#![feature(asm)]
+#![no_builtins]
+#![no_main]
 #![no_std]
-pub mod draw;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Position {
-    Invalid,
-    Peg,
-    NoPeg,
-}
+extern crate alloc;
 
-const I: Position = Position::Invalid;
-const P: Position = Position::Peg;
-const N: Position = Position::NoPeg;
+#[macro_use]
+mod peripherals;
+mod graphics;
+mod memory;
 
-// 24+9 = 33
-#[derive(Clone)]
-pub struct Board {
-    positions: [Position; 49],
-}
+use alloc::string::String;
+use core::alloc::Layout;
+use core::panic::PanicInfo;
+use peripherals::gpio::*;
+use peripherals::mailbox::*;
+use peripherals::uart::*;
 
-#[derive(Clone, Copy, Debug)]
-pub struct Pos {
-    x: usize,
-    y: usize,
-}
+#[global_allocator]
+static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x70000, 0x10000);
 
-impl Pos {
-    pub fn new(x: usize, y: usize) -> Pos {
-        Pos { x, y }
+#[no_mangle]
+pub extern "C" fn kernel_main() -> ! {
+    peripherals::initialize();
+
+    let mut framebuffer = graphics::initialize();
+
+    success!("kernel initialized");
+
+    let mut message = Message::<30>::new();
+    message.get_firmware_version_request();
+    message.get_board_model_request();
+    message.get_board_revision_request();
+    message.get_board_serial_request();
+    message.get_arm_memory_request();
+    message.get_video_core_memory_request();
+    message.finalize_send_receive(Channel::Tags);
+
+    let firmware_version = message.get_firmware_version_response();
+    let board_model = message.get_board_model_response();
+    let board_revision = message.get_board_revision_response();
+    let board_serial = message.get_board_serial_response();
+    let arm_memory_layout = message.get_arm_memory_response();
+    let video_core_memory_layout = message.get_video_core_memory_response();
+
+    log_line!("[ device ] firmware version: 0x{:x}", firmware_version);
+    log_line!("[ device ] board model: 0x{:x}", board_model);
+    log_line!("[ device ] board revision: 0x{:x}", board_revision);
+    log_line!("[ device ] board serial: 0x{:x}", board_serial);
+    log_line!("[ device ] arm memory: {}", arm_memory_layout);
+    log_line!("[ device ] video core memory: {}", video_core_memory_layout);
+
+    log_line!("turning on status led");
+
+    let mut message = Message::<20>::new();
+    message.set_led_status_request(OnBoardLed::Status, true);
+    message.set_led_status_request(OnBoardLed::Power, false);
+    message.finalize_send_receive(Channel::Tags);
+
+    log_line!("fetch device temperature");
+
+    // gpio test
+
+    log_line!("starting gpio test");
+
+    set_function(Pin::Virtual5, Function::Output);
+    set_function(Pin::Virtual6, Function::Output);
+
+    set_state(Pin::Virtual5, true);
+    set_state(Pin::Virtual6, false);
+
+    // graphics test
+
+    log_line!("starting graphics test");
+
+    framebuffer.draw_rectangle(600, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
+    framebuffer.draw_text(600, 40, "i am rectangular", 0x00FF00, 0x000000);
+
+    // heap allocation test
+
+    log_line!("starting allocation test");
+
+    let boxed = alloc::boxed::Box::new(50);
+    assert!(*boxed == 50, "incorrect value in box");
+
+    let heap_string = String::from("i live on the heap");
+    success!("{}", heap_string);
+
+    success!("allocation test passed");
+
+    // echo test
+
+    log_line!("starting echo test");
+
+    loop {
+        let mut message = Message::<20>::new();
+        message.get_temperature_request();
+        message.finalize_send_receive(Channel::Tags);
+
+        let temperature = message.get_temperature_response();
+        log_line!("[ device ] temperature: {}C", temperature / 1000);
+
+        let character = read_character_blocking();
+        write_character_blocking(character);
     }
 }
 
-const INITIAL_BOARD: Board = Board {
-    #[rustfmt::skip]
-    positions: [
-        I, I, P, P, P, I, I,
-        I, I, P, P, P, I, I,
-        P, P, P, P, P, P, P,
-        P, P, P, N, P, P, P,
-        P, P, P, P, P, P, P,
-        I, I, P, P, P, I, I,
-        I, I, P, P, P, I, I,
-    ],
-};
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum MoveErr {
-    InvalidFrom,
-    InvalidTo,
-    NoPegAtFrom,
-    NotAJump,
-    PegAtTo,
+#[no_mangle]
+#[lang = "oom"]
+#[allow(improper_ctypes_definitions)]
+pub extern "C" fn oom(_layout: Layout) -> ! {
+    error!("out of memory");
+    loop {}
 }
 
-#[derive(Clone, Copy)]
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+#[lang = "eh_personality"]
+pub extern "C" fn eh_personality() {
+    error!("unwind");
 }
 
-impl Pos {
-    fn shift(&self, dir: Direction, count: usize) -> Pos {
-        match dir {
-            Direction::Up => Pos {
-                x: self.x,
-                y: self.y.wrapping_sub(count),
-            },
-            Direction::Down => Pos {
-                x: self.x,
-                y: self.y.wrapping_add(count),
-            },
-            Direction::Left => Pos {
-                x: self.x.wrapping_sub(count),
-                y: self.y,
-            },
-            Direction::Right => Pos {
-                x: self.x.wrapping_add(count),
-                y: self.y,
-            },
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    // location.caller
+
+    if let Some(location) = info.location() {
+        match info.message() {
+            Some(message) => log_line!(
+                "[ panic ] {} {}:{}: {}",
+                location.file(),
+                location.line(),
+                location.column(),
+                message
+            ),
+            None => log_line!(
+                "[ panic ] {} {}:{}",
+                location.file(),
+                location.line(),
+                location.column()
+            ),
+        }
+    } else {
+        match info.message() {
+            Some(message) => log_line!("[ panic ] {}", message),
+            None => log_line!("[ panic ]"),
         }
     }
 
-    fn in_range(&self) -> bool {
-        self.x < 8 && self.y < 8
-    }
-}
-
-impl Board {
-    pub fn new() -> Board {
-        INITIAL_BOARD.clone()
-    }
-
-    pub fn do_move(&mut self, from: Pos, direction: Direction) -> Result<(), MoveErr> {
-        match self.at(from) {
-            Position::Invalid => return Err(MoveErr::InvalidFrom),
-            Position::NoPeg => return Err(MoveErr::NoPegAtFrom),
-            Position::Peg => (),
-        }
-        let jump_over = from.shift(direction, 1);
-        if !jump_over.in_range() {
-            return Err(MoveErr::InvalidTo);
-        }
-        match self.at(jump_over) {
-            Position::Invalid => return Err(MoveErr::InvalidTo),
-            Position::NoPeg => return Err(MoveErr::NotAJump),
-            Position::Peg => (),
-        }
-        let jump_to = from.shift(direction, 2);
-        if !jump_over.in_range() {
-            return Err(MoveErr::InvalidTo);
-        }
-        match self.at(jump_to) {
-            Position::Invalid => Err(MoveErr::InvalidTo),
-            Position::NoPeg => {
-                *self.mut_at(from) = Position::NoPeg;
-                *self.mut_at(jump_over) = Position::NoPeg;
-                *self.mut_at(jump_to) = Position::Peg;
-                Ok(())
-            }
-            Position::Peg => Err(MoveErr::PegAtTo),
-        }
-    }
-    pub fn at(&self, pos: Pos) -> Position {
-        self.positions[pos.y * 7 + pos.x]
-    }
-    pub fn mut_at(&mut self, pos: Pos) -> &mut Position {
-        &mut self.positions[pos.y * 7 + pos.x]
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_move() {
-        let mut board = Board::new();
-        let from = Pos::new(3, 1);
-        assert_eq!(board.do_move(from, Direction::Down), Ok(()));
-        assert_eq!(board.at(from), Position::NoPeg);
-        assert_eq!(board.at(from.shift(Direction::Down, 1)), Position::NoPeg);
-        assert_eq!(board.at(from.shift(Direction::Down, 2)), Position::Peg);
-    }
+    loop {}
 }
