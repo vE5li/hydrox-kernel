@@ -93,7 +93,7 @@ pub fn draw_end_screen(
     );
 
     let text = match end_game_state {
-        EndGameState::PlayerWon  => "  You won!",
+        EndGameState::PlayerWon  => " You won!",
         EndGameState::PlayerLost => "You lost :(",
     };
 

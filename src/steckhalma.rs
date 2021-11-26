@@ -128,6 +128,10 @@ impl Pos {
 impl Board {
 
     pub fn new() -> Board {
+        INITIAL_BOARD.clone()
+    }
+
+    pub fn new_easy() -> Board {
         INITIAL_BOARD_EASY.clone()
     }
 

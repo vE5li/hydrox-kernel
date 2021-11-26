@@ -137,10 +137,21 @@ pub extern "C" fn kernel_main() -> ! {
         }
 
         match user_input {
+
             ' ' => {
                 game_state.space_pressed();
                 draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &cursor_pos, true);
             },
+
+            'r' => game_state = GameState::Resetting,
+
+            'E' => {
+                if game_state == GameState::MovingCursor || game_state == GameState::MovingPeg {
+                    board = Board::new_easy();
+                    draw(&mut framebuffer, &draw_settings, offset, &board, &game_state, cursor_pos);
+                }
+            },
+
             _other => {},
         };
 
