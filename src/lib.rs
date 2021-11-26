@@ -12,6 +12,8 @@ extern crate alloc;
 mod peripherals;
 mod graphics;
 mod memory;
+mod steckhalma;
+mod steckhalma_draw;
 
 use alloc::string::String;
 use core::alloc::Layout;

@@ -1,5 +1,4 @@
 #![no_std]
-pub mod draw;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Position {
@@ -20,8 +19,8 @@ pub struct Board {
 
 #[derive(Clone, Copy, Debug)]
 pub struct Pos {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 impl Pos {

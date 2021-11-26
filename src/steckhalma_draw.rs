@@ -1,4 +1,4 @@
-use crate::*;
+use steckhalma::*;
 
 pub struct Framebuffer {}
 impl Framebuffer {
