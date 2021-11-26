@@ -93,9 +93,9 @@ pub fn draw_end_screen(
     );
 
     let text = match end_game_state {
-        EndGameState::PlayerWon => "You won!",
-        EndGameState::PlayerLost => "Better luck next time",
+        EndGameState::PlayerWon  => "  You won!",
+        EndGameState::PlayerLost => "You lost :(",
     };
 
-    framebuffer.draw_text(offset.0 + 30, offset.1 + 40, text, settings.colour_text, settings.colour_background);
+    framebuffer.draw_text(offset.0 + 70, offset.1 + 235, text, settings.colour_text, settings.colour_background, 4);
 }

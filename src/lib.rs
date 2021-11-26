@@ -76,10 +76,10 @@ pub extern "C" fn kernel_main() -> ! {
     let mut cursor_pos = Pos { x: 0, y: 0 };
 
     let draw_settings = DrawSettings {
-        colour_background: 0x888888,
+        colour_background: 0x222222,
         colour_border: 0x3b3b3b,
-        colour_nopeg: 0x000000,
-        colour_peg: 0x666666,
+        colour_nopeg: 0x3b3b3b,
+        colour_peg: 0x804000,
         colour_text: 0xbbbbbb,
         colour_cursor_moving: 0xff3333,
         colour_cursor_selected: 0x3333ff,

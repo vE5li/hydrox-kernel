@@ -51,13 +51,13 @@ impl Framebuffer {
         }
     }
 
-    pub fn draw_character(&mut self, x_position: usize, y_position: usize, character: char, foreground_color: u32, backgroud_color: u32) {
+    pub fn draw_character(&mut self, x_position: usize, y_position: usize, character: char, foreground_color: u32, backgroud_color: u32, scale: usize) {
 
         let glyph = &FONT[character as u8 as usize];
 
-        for y in 0..FONT_HEIGHT {
-            for x in 0..FONT_WIDTH {
-                match glyph[y] & 1 << x == 0 {
+        for y in 0..(FONT_HEIGHT * scale) {
+            for x in 0..(FONT_WIDTH * scale) {
+                match glyph[y / scale] & 1 << (x / scale) == 0 {
                     true => self.draw_pixel(x_position + x, y_position + y, backgroud_color),
                     false => self.draw_pixel(x_position + x, y_position + y, foreground_color),
                 }
@@ -65,10 +65,10 @@ impl Framebuffer {
         }
     }
 
-    pub fn draw_text(&mut self, mut x_position: usize, y_position: usize, text: &str, foreground_color: u32, backgroud_color: u32) {
+    pub fn draw_text(&mut self, mut x_position: usize, y_position: usize, text: &str, foreground_color: u32, backgroud_color: u32, scale: usize) {
         for byte in text.as_bytes().iter() { // use as bytes instead of chars for performance reasons
-            self.draw_character(x_position, y_position, *byte as char, foreground_color, backgroud_color);
-            x_position += FONT_WIDTH;
+            self.draw_character(x_position, y_position, *byte as char, foreground_color, backgroud_color, scale);
+            x_position += FONT_WIDTH * scale;
         }
     }
 }

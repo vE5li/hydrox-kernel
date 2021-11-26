@@ -66,7 +66,7 @@ impl Write for Logger {
                     }
 
                 } else {
-                    framebuffer.draw_character(self.cursor_x, self.cursor_y, *byte as char, 0xAAAAAA, 0x000000);
+                    framebuffer.draw_character(self.cursor_x, self.cursor_y, *byte as char, 0xAAAAAA, 0x000000, 1);
                     self.cursor_x += 8;
                 }
             }
