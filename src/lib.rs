@@ -70,39 +70,81 @@ pub extern "C" fn kernel_main() -> ! {
     message.set_led_status_request(OnBoardLed::Power, false);
     message.finalize_send_receive(Channel::Tags);
 
+    let offset = (150, 50);
+    let mut board = Board::new();
+    let mut game_state = GameState::Resetting;
     let mut cursor_pos = Pos { x: 0, y: 0 };
 
+    let draw_settings = DrawSettings {
+        colour_background: 0x888888,
+        colour_border: 0x3b3b3b,
+        colour_nopeg: 0x000000,
+        colour_peg: 0x666666,
+        colour_text: 0xbbbbbb,
+        colour_cursor_moving: 0xff3333,
+        colour_cursor_selected: 0x3333ff,
+        field_size: 60,
+        margin: 5,
+    };
+
     loop {
-        let board = Board::new();
 
-        let draw_settings = DrawSettings {
-            colour_background: 0x888888,
-            colour_border: 0x3b3b3b,
-            colour_nopeg: 0x000000,
-            colour_peg: 0x666666,
-            colour_highlight: 0xff3333,
-            field_size: 60,
-            margin: 5,
-        };
-
-        draw(&mut framebuffer, &draw_settings, (150, 50), &board, cursor_pos);
+        if game_state == GameState::Resetting {
+            board = Board::new();
+            game_state = GameState::MovingCursor;
+            draw(&mut framebuffer, &draw_settings, offset, &board, &game_state, cursor_pos);
+        }
 
         let user_input = read_character_blocking();
 
-        let try_move_cursor = |direction, cursor_pos: &mut Pos| {
-            let new_cursor_pos = cursor_pos.shift(direction, 1);
-            if new_cursor_pos.in_range() {
-                *cursor_pos = new_cursor_pos;
-            }
+        let direction = match user_input {
+            'h' => Some(Direction::Left),
+            'j' => Some(Direction::Down),
+            'k' => Some(Direction::Up),
+            'l' => Some(Direction::Right),
+            _other => None,
         };
 
-        match user_input {
-            'h' => try_move_cursor(Direction::Left, &mut cursor_pos),
-            'j' => try_move_cursor(Direction::Down, &mut cursor_pos),
-            'k' => try_move_cursor(Direction::Up, &mut cursor_pos),
-            'l' => try_move_cursor(Direction::Right, &mut cursor_pos),
-            _invalid => {},
+        if let Some(direction) = direction {
+            match game_state {
+
+                GameState::MovingCursor => {
+                    let new_cursor_pos = cursor_pos.shift(direction, 1);
+                    if new_cursor_pos.in_range() {
+                        draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &cursor_pos, false);
+                        draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &new_cursor_pos, true);
+                        cursor_pos = new_cursor_pos;
+                    }
+                },
+
+                GameState::MovingPeg => {
+                    if let Ok((jump_over, jump_to)) = board.do_move(cursor_pos, direction) {
+                        game_state = GameState::MovingCursor;
+                        draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &cursor_pos, false);
+                        draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &jump_over, false);
+                        draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &jump_to, true);
+                        cursor_pos = jump_to;
+
+                        if let Some(end_game_state) = board.check_game_over() {
+                            draw_end_screen(&mut framebuffer, &draw_settings, offset, end_game_state);
+                            game_state = GameState::GameOver(end_game_state);
+                        }
+                    }
+                },
+
+                _other => { },
+            }
         }
+
+        match user_input {
+            ' ' => {
+                game_state.space_pressed();
+                draw_tile(&mut framebuffer, &draw_settings, offset, &board, &game_state, &cursor_pos, true);
+            },
+            _other => {},
+        };
+
+        write_character_blocking(user_input);
     }
 }
 

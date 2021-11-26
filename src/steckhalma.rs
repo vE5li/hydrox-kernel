@@ -1,5 +1,31 @@
 #![no_std]
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum EndGameState {
+    PlayerWon,
+    PlayerLost,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum GameState {
+    Resetting,
+    MovingCursor,
+    MovingPeg,
+    GameOver(EndGameState),
+}
+
+impl GameState {
+
+    pub fn space_pressed(&mut self) {
+        match self {
+            GameState::MovingCursor => *self = GameState::MovingPeg,
+            GameState::MovingPeg => *self = GameState::MovingCursor,
+            GameState::GameOver(..) => *self = GameState::Resetting,
+            _other => {},
+        };
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Position {
     Invalid,
@@ -39,6 +65,19 @@ const INITIAL_BOARD: Board = Board {
         P, P, P, P, P, P, P,
         I, I, P, P, P, I, I,
         I, I, P, P, P, I, I,
+    ],
+};
+
+const INITIAL_BOARD_EASY: Board = Board {
+    #[rustfmt::skip]
+    positions: [
+        I, I, N, N, N, I, I,
+        I, I, N, N, N, I, I,
+        N, N, N, N, N, N, N,
+        N, N, N, N, N, N, N,
+        N, P, P, N, P, N, N,
+        I, I, N, N, N, I, I,
+        I, I, N, N, N, I, I,
     ],
 };
 
@@ -87,45 +126,84 @@ impl Pos {
 }
 
 impl Board {
+
     pub fn new() -> Board {
-        INITIAL_BOARD.clone()
+        INITIAL_BOARD_EASY.clone()
     }
 
-    pub fn do_move(&mut self, from: Pos, direction: Direction) -> Result<(), MoveErr> {
+    fn check_move(&self, from: Pos, direction: Direction) -> Result<(Pos, Pos), MoveErr> {
+
         match self.at(from) {
             Position::Invalid => return Err(MoveErr::InvalidFrom),
             Position::NoPeg => return Err(MoveErr::NoPegAtFrom),
             Position::Peg => (),
         }
+
         let jump_over = from.shift(direction, 1);
         if !jump_over.in_range() {
             return Err(MoveErr::InvalidTo);
         }
+
         match self.at(jump_over) {
             Position::Invalid => return Err(MoveErr::InvalidTo),
             Position::NoPeg => return Err(MoveErr::NotAJump),
             Position::Peg => (),
         }
+
         let jump_to = from.shift(direction, 2);
-        if !jump_over.in_range() {
+        if !jump_to.in_range() {
             return Err(MoveErr::InvalidTo);
         }
+
         match self.at(jump_to) {
             Position::Invalid => Err(MoveErr::InvalidTo),
-            Position::NoPeg => {
-                *self.mut_at(from) = Position::NoPeg;
-                *self.mut_at(jump_over) = Position::NoPeg;
-                *self.mut_at(jump_to) = Position::Peg;
-                Ok(())
-            }
+            Position::NoPeg => Ok((jump_over, jump_to)),
             Position::Peg => Err(MoveErr::PegAtTo),
         }
     }
+
+    pub fn do_move(&mut self, from: Pos, direction: Direction) -> Result<(Pos, Pos), MoveErr> {
+        let (jump_over, jump_to) = self.check_move(from, direction)?;
+
+        *self.mut_at(from) = Position::NoPeg;
+        *self.mut_at(jump_over) = Position::NoPeg;
+        *self.mut_at(jump_to) = Position::Peg;
+
+        Ok((jump_over, jump_to))
+    }
+
     pub fn at(&self, pos: Pos) -> Position {
         self.positions[pos.y * 7 + pos.x]
     }
+
     pub fn mut_at(&mut self, pos: Pos) -> &mut Position {
         &mut self.positions[pos.y * 7 + pos.x]
+    }
+
+    pub fn check_game_over(&self) -> Option<EndGameState> {
+
+        let mut peg_counter = 0;
+
+        for x in 0..7 {
+            for y in 0..7 {
+                let position = Pos::new(x, y);
+
+                if self.at(position) == Position::Peg {
+                    peg_counter += 1;
+
+                    for direction in [Direction::Up, Direction::Down, Direction::Left, Direction::Right] {
+                        if self.check_move(position, direction).is_ok() {
+                            return None;
+                        }
+                    }
+                }
+            }
+        }
+
+        match peg_counter {
+            1 => Some(EndGameState::PlayerWon),
+            _more => Some(EndGameState::PlayerLost),
+        }
     }
 }
 
