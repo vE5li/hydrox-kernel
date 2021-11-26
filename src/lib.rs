@@ -23,6 +23,10 @@ use alloc::string::String;
 #[global_allocator]
 static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x70000, 0x10000);
 
+extern {
+    pub fn get_el() -> u64;
+}
+
 #[no_mangle]
 pub extern fn kernel_main() -> ! {
 
@@ -31,6 +35,7 @@ pub extern fn kernel_main() -> ! {
     let mut framebuffer = graphics::initialize();
 
     success!("kernel initialized");
+    log_line!("elevation level {}", unsafe { get_el() });
 
     let mut message = Message::<30>::new();
     message.get_firmware_version_request();

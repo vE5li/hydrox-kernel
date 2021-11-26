@@ -17,7 +17,7 @@ SECTIONS
     }
 
     .rodata : ALIGN(4K) {
-	   *(.rodata .rodata.*)
+       *(.rodata .rodata.*)
     }
 
     .data : ALIGN(4K) {
@@ -48,6 +48,6 @@ SECTIONS
         *(.gcc_except_table)
     }
 
-	. = ALIGN(4K);
-	kernel_limit = .;
+    . = ALIGN(4K);
+    kernel_limit = .;
 }
