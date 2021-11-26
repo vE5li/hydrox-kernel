@@ -21,6 +21,8 @@ use core::panic::PanicInfo;
 use peripherals::gpio::*;
 use peripherals::mailbox::*;
 use peripherals::uart::*;
+use steckhalma::*;
+use steckhalma_draw::*;
 
 #[global_allocator]
 static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x70000, 0x10000);
@@ -68,51 +70,39 @@ pub extern "C" fn kernel_main() -> ! {
     message.set_led_status_request(OnBoardLed::Power, false);
     message.finalize_send_receive(Channel::Tags);
 
-    log_line!("fetch device temperature");
-
-    // gpio test
-
-    log_line!("starting gpio test");
-
-    set_function(Pin::Virtual5, Function::Output);
-    set_function(Pin::Virtual6, Function::Output);
-
-    set_state(Pin::Virtual5, true);
-    set_state(Pin::Virtual6, false);
-
-    // graphics test
-
-    log_line!("starting graphics test");
-
-    framebuffer.draw_rectangle(600, 0, 30, 30, 0xAAAAAA, 0xAAAAAA);
-    framebuffer.draw_text(600, 40, "i am rectangular", 0x00FF00, 0x000000);
-
-    // heap allocation test
-
-    log_line!("starting allocation test");
-
-    let boxed = alloc::boxed::Box::new(50);
-    assert!(*boxed == 50, "incorrect value in box");
-
-    let heap_string = String::from("i live on the heap");
-    success!("{}", heap_string);
-
-    success!("allocation test passed");
-
-    // echo test
-
-    log_line!("starting echo test");
+    let mut cursor_pos = Pos { x: 0, y: 0 };
 
     loop {
-        let mut message = Message::<20>::new();
-        message.get_temperature_request();
-        message.finalize_send_receive(Channel::Tags);
+        let board = Board::new();
 
-        let temperature = message.get_temperature_response();
-        log_line!("[ device ] temperature: {}C", temperature / 1000);
+        let draw_settings = DrawSettings {
+            colour_background: 0x888888,
+            colour_border: 0x3b3b3b,
+            colour_nopeg: 0x000000,
+            colour_peg: 0x666666,
+            colour_highlight: 0xff3333,
+            field_size: 60,
+            margin: 5,
+        };
 
-        let character = read_character_blocking();
-        write_character_blocking(character);
+        draw(&mut framebuffer, &draw_settings, (150, 50), &board, cursor_pos);
+
+        let user_input = read_character_blocking();
+
+        let try_move_cursor = |direction, cursor_pos: &mut Pos| {
+            let new_cursor_pos = cursor_pos.shift(direction, 1);
+            if new_cursor_pos.in_range() {
+                *cursor_pos = new_cursor_pos;
+            }
+        };
+
+        match user_input {
+            'h' => try_move_cursor(Direction::Left, &mut cursor_pos),
+            'j' => try_move_cursor(Direction::Down, &mut cursor_pos),
+            'k' => try_move_cursor(Direction::Up, &mut cursor_pos),
+            'l' => try_move_cursor(Direction::Right, &mut cursor_pos),
+            _invalid => {},
+        }
     }
 }
 

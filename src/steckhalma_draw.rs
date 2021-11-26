@@ -1,29 +1,29 @@
 use steckhalma::*;
+use graphics::Framebuffer;
 
-pub struct Framebuffer {}
-impl Framebuffer {
-    fn draw_pixel(&mut self, x_position: usize, y_position: usize, color: u32) {}
-    fn draw_rectangle(
-        &mut self,
-        x_position: usize,
-        y_position: usize,
-        width: usize,
-        height: usize,
-        fill_color: u32,
-        border_color: u32,
-    ) {
-    }
-}
+//pub struct Framebuffer {}
+//impl Framebuffer {
+//    fn draw_pixel(&mut self, x_position: usize, y_position: usize, color: u32) {}
+//    fn draw_rectangle(
+//        &mut self,
+//        x_position: usize,
+//        y_position: usize,
+//        width: usize,
+//        height: usize,
+//        fill_color: u32,
+//        border_color: u32,
+//    ) {
+//    }
+//}
 
 pub struct DrawSettings {
-    colour_background: u32,
-    colour_border: u32,
-    colour_invalid: u32,
-    colour_nopeg: u32,
-    colour_peg: u32,
-    colour_highlight: u32,
-    field_size: usize,
-    margin: usize,
+    pub colour_background: u32,
+    pub colour_border: u32,
+    pub colour_nopeg: u32,
+    pub colour_peg: u32,
+    pub colour_highlight: u32,
+    pub field_size: usize,
+    pub margin: usize,
 }
 
 impl DrawSettings {
@@ -37,7 +37,7 @@ pub fn draw(
     settings: &DrawSettings,
     offset: (usize, usize),
     board: &Board,
-    highlight_pos: Pos,
+    cursor_pos: Pos,
 ) {
     fb.draw_rectangle(
         offset.0,
@@ -50,18 +50,18 @@ pub fn draw(
     for x in 0..7 {
         for y in 0..7 {
             let colour = match board.at(Pos::new(x, y)) {
-                Position::Invalid => settings.colour_invalid,
+                Position::Invalid => settings.colour_background,
                 Position::NoPeg => settings.colour_nopeg,
                 Position::Peg => settings.colour_peg,
             };
-            let border = if (highlight_pos.x, highlight_pos.y) == (x, y) {
+            let border = if (cursor_pos.x, cursor_pos.y) == (x, y) {
                 settings.colour_highlight
             } else {
                 colour
             };
             fb.draw_rectangle(
-                x * (settings.field_size + settings.margin) + settings.margin,
-                y * (settings.field_size + settings.margin) + settings.margin,
+                offset.0 + x * (settings.field_size + settings.margin) + settings.margin,
+                offset.1 + y * (settings.field_size + settings.margin) + settings.margin,
                 settings.field_size,
                 settings.field_size,
                 colour,

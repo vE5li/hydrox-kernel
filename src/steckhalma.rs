@@ -60,7 +60,7 @@ pub enum Direction {
 }
 
 impl Pos {
-    fn shift(&self, dir: Direction, count: usize) -> Pos {
+    pub fn shift(&self, dir: Direction, count: usize) -> Pos {
         match dir {
             Direction::Up => Pos {
                 x: self.x,
@@ -81,8 +81,8 @@ impl Pos {
         }
     }
 
-    fn in_range(&self) -> bool {
-        self.x < 8 && self.y < 8
+    pub fn in_range(&self) -> bool {
+        self.x < 7 && self.y < 7
     }
 }
 
