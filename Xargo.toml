@@ -1,2 +1,2 @@
-[target.aarch64-feo-kernel.dependencies]
+[target.aarch64-hydrox-kernel.dependencies]
 alloc = {}

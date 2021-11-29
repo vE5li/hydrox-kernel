@@ -22,8 +22,8 @@ CONFIGURATION_FILE := $(MOUNT_POINT)/config.txt
 
 # xargo
 LINKER_FLAGS ?= -lgcc -nostdlib -Wl,--build-id=none
-RUST_TARGET ?= aarch64-feo-kernel
-RUST_OBJECT := target/$(RUST_TARGET)/release/libfeo_kernel.a
+RUST_TARGET ?= aarch64-hydrox-kernel
+RUST_OBJECT := target/$(RUST_TARGET)/release/libhydrox_kernel.a
 
 # build
 all: build link
