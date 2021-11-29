@@ -2,10 +2,8 @@ ENTRY(start)
 
 SECTIONS
 {
-    . = 0x60000; /* COMPLETE OVERKILL */
-    stack_base = .; /* stack grows down, so allocate with some space */
-
     . = 0x70000;
+    stack_base = .; /* stack grows down, so allocate with some space */
     heap_base = .;
 
     . = 0x80000;
