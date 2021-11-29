@@ -17,6 +17,7 @@ cpu_setup:
         mov     x0, #3 << 20
         msr     cpacr_el1, x0
 
+        #
         mov     x0, #1 << 31
         orr     x0, x0, #2
         msr     hcr_el2, x0
@@ -26,14 +27,6 @@ cpu_setup:
 
         mov     x0, #0x5
         msr     spsr_el2, x0
-
-        // ...
-        //mrs       x0, scr_el3
-        //orr   x0, x0, #1 << 10
-        //msr       scr_el3, x0
-
-        //mov   x0, #0x33ff // should be just ~(1 << 9) ?
-        //msr   cptr_el3, x0
 
         // switch to elevation level 1
 
@@ -47,28 +40,7 @@ cpu_setup:
         //orr       x0, x0, #1 << 2 // d cache
         //msr       sctlr_el1, x0
 
-        // ...
-        //mov     x0, #1 << 31
-        //msr     hcr_el2, x0
-
-        // ...
-        //mov   x0, #1
-        //orr       x0, x0, #3 << 4
-
-        //orr       x0, x0, #1 << 10
-        //msr     scr_el3, x0
-
-        // ...
-        //mov   x0, #5
-        //orr       x0, x0, #7 << 6
-        //msr     spsr_el3, x0
-
-        // start rust setup
-        //adr     x0, rust_setup
-        //msr     elr_el3, x0
         eret
-
-        //b     rust_setup
 
 rust_setup:
 
