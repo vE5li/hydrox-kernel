@@ -16,7 +16,6 @@ KERNEL_BINARY ?= $(BINARY_DIR)/kernel.bin
 KERNEL_ELF := $(LINKER_DIR)/kernel.elf
 
 # files
-CLEAN_FILES := bootcode.bin config.txt fixup4.dat kernel.bin start4.elf
 OBJECT_FILES := start.s.o
 CONFIGURATION_FILE := $(MOUNT_POINT)/config.txt
 
@@ -73,8 +72,8 @@ config: copy
 	echo "hdmi_group=2" >> $(CONFIGURATION_FILE)
 	echo "hdmi_mode=9" >> $(CONFIGURATION_FILE)
 
-# make a workiing
-export: zero config
+# make a working sd card
+export: zero copy config
 
 # show disassembled code
 opcode: build

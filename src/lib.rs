@@ -15,6 +15,7 @@ mod graphics;
 
 use core::alloc::Layout;
 use core::panic::PanicInfo;
+use peripherals::timer::*;
 use peripherals::uart::*;
 use peripherals::gpio::*;
 use peripherals::mailbox::*;
@@ -25,6 +26,8 @@ static ALLOCATOR: memory::heap::Allocator = memory::heap::Allocator::new(0x70000
 
 extern {
     pub fn get_el() -> u64;
+    pub fn irq_init_vectors();
+    pub fn irq_enable();
 }
 
 #[no_mangle]
@@ -97,6 +100,22 @@ pub extern fn kernel_main() -> ! {
     success!("{}", heap_string);
 
     success!("allocation test passed");
+
+    // interrupts
+
+    log_line!("enabling interrupts");
+
+    unsafe {
+        irq_init_vectors();
+        irq_enable();
+    }
+
+    // timers
+
+    log_line!("setting system timer 1 and 3");
+
+    set_timer(Timer::Timer1, 2);
+    set_timer(Timer::Timer3, 4);
 
     // echo test
 

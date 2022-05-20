@@ -85,6 +85,7 @@ impl Pin {
     pub const Physical5: Pin = Pin::Virtual3;
     pub const Physical7: Pin = Pin::Virtual4;
     pub const Physical8: Pin = Pin::Virtual14;
+    pub const Physical9: Pin = Pin::Virtual21;
     pub const Physical10: Pin = Pin::Virtual15;
     pub const Physical11: Pin = Pin::Virtual17;
     pub const Physical12: Pin = Pin::Virtual18;
